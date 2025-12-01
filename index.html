@@ -472,6 +472,33 @@ tbody tr:hover .action-btn{opacity:1;visibility:visible;}
 }
 
 
+.gaz-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 20px;
+}
+
+.gaz-total {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  color: #3e2723;
+}
+
+.gaz-total-m3 {
+  background: linear-gradient(180deg, #fff59d, #fbc02d);
+}
+
+.gaz-total-kwh {
+  background: linear-gradient(180deg, #ffd54f, #ffb300);
+}
+
+
+
+  
 
 </style>
 
@@ -519,6 +546,12 @@ tbody tr:hover .action-btn{opacity:1;visibility:visible;}
     <button id="exportCsvBtn" style="display:none;" title="Voir les barres graphiques de consommation par jour">Graphique</button>
     <button id="exportExcelGazBtn" style="display:none;" title="Exporter les données en Excel (kWh, m³, durée, tonnage)">Export Excel</button>
 
+
+
+
+
+
+    
 
   </div>
 
@@ -1187,13 +1220,35 @@ downloadBtn.style.display="inline-block";
 const exportBtn = document.getElementById("exportCsvBtn");
 const excelBtn  = document.getElementById("exportExcelGazBtn");
 
+
+
+// === Gestion affichage boutons et pastilles GAZ ===
 if (folderName.toLowerCase().includes("consommation gaz")) {
-    exportBtn.style.display = "inline-block";
-    excelBtn.style.display  = "inline-block";
+  exportBtn.style.display = "inline-block";
+  excelBtn.style.display  = "inline-block";
+
+  // --- Création des pastilles totales GAZ si absentes ---
+  const excelBtnGaz = document.getElementById("exportExcelGazBtn");
+  const existingSummary = document.querySelector(".gaz-summary");
+  if (excelBtnGaz && !existingSummary) {
+    const summaryDiv = document.createElement("div");
+    summaryDiv.className = "gaz-summary";
+    summaryDiv.innerHTML = `
+      <span class="gaz-total gaz-total-m3" title="Total m³ calculé">m³ total: --</span>
+      <span class="gaz-total gaz-total-kwh" title="Total kWh calculé">kWh total: --</span>
+    `;
+    excelBtnGaz.insertAdjacentElement("afterend", summaryDiv);
+  }
 } else {
-    exportBtn.style.display = "none";
-    excelBtn.style.display  = "none";
+  // --- Masquage des boutons GAZ ---
+  exportBtn.style.display = "none";
+  excelBtn.style.display  = "none";
+
+  // --- Suppression des pastilles totales GAZ ---
+  const existingSummary = document.querySelector(".gaz-summary");
+  if (existingSummary) existingSummary.remove();
 }
+
 
 
 
@@ -1509,6 +1564,49 @@ if (
       const M = String(diffMinutes % 60).padStart(2,"0");
       const dureeFormatee = `${H}:${M}`;
 
+
+/********************************************************************************************
+ * ⚠️⚠️⚠️ BLOC DE CORRECTION TEMPORAIRE - FICHIERS CSV CORROMPUS ⚠️⚠️⚠️
+ * -----------------------------------------------------------------------------------------
+ * Les jours suivants contiennent des données fausses (décalées d’un jour) :
+ *   - 21/09
+ *   - 28/09
+ *   - 05/10
+ *   - 12/10
+ *   - 19/10
+ * On force ces jours à zéro (0 m³, 0 kWh, 0 durée).
+ * À SUPPRIMER LORSQUE LES CSV SERONT CORRIGÉS SUR LE DRIVE.
+ ********************************************************************************************/
+
+try {
+  // Extraire la date directement depuis le nom du fichier CSV
+  const m = f.name.match(/(\d{8})/);
+  if (m) {
+    const yyyy = m[1].slice(0, 4);
+    const mm = m[1].slice(4, 6);
+    const dd = m[1].slice(6, 8);
+    const shortDate = `${dd}/${mm}`;
+    const badDates = ["21/09", "28/09", "05/10", "12/10", "19/10"];
+    if (badDates.includes(shortDate)) {
+      console.warn("⚠️ Fichier CSV corrompu détecté :", shortDate, "→ valeurs forcées à 0");
+      diffKwh = 0;
+      diffM3 = 0;
+      diffMinutes = 0;
+    }
+  }
+} catch (err) {
+  console.warn("Erreur dans le bloc de correction CSV:", err);
+}
+
+/********************************************************************************************
+ * ⚠️⚠️⚠️ FIN DU BLOC DE CORRECTION TEMPORAIRE - À SUPPRIMER PLUS TARD ⚠️⚠️⚠️
+ ********************************************************************************************/
+
+
+
+
+
+      
       const btns = tdAction.querySelectorAll(".gaz-btn");
       const btnKwh    = btns[0];
       const btnM3     = btns[1];
@@ -1524,12 +1622,28 @@ if (
       }
 
       // ============================
-      // 🔸 Affichage m³
-      // ============================
-      btnM3.textContent = diffM3.toFixed(1) + " m³";
-      btnM3.style.background = "linear-gradient(180deg, #fff59d, #fbc02d)";
-      btnM3.style.color = "#5d4037";
-      btnM3.style.minWidth = "120px";
+// 🔸 Affichage m³ avec dégradé dynamique selon la valeur
+btnM3.textContent = diffM3.toFixed(1) + " m³";
+btnM3.style.minWidth = "125px";
+btnM3.style.color = "#5d4037";
+
+// Couleurs de base (de jaune → rouge)
+const minM3 = 1000;
+const maxM3 = 5000;
+let ratio = (diffM3 - minM3) / (maxM3 - minM3);
+ratio = Math.max(0, Math.min(1, ratio)); // clamp entre 0 et 1
+
+// Interpolation entre jaune (255,245,157) et rouge (255,112,67)
+const r1 = 255, g1 = 245, b1 = 157; // jaune
+const r2 = 255, g2 = 112, b2 = 67;  // rouge
+const r = Math.round(r1 + (r2 - r1) * ratio);
+const g = Math.round(g1 + (g2 - g1) * ratio);
+const b = Math.round(b1 + (b2 - b1) * ratio);
+const color1 = `rgb(${r},${g},${b})`;
+const color2 = `rgb(${Math.max(r-20,0)},${Math.max(g-20,0)},${Math.max(b-20,0)})`;
+
+btnM3.style.background = `linear-gradient(180deg, ${color1}, ${color2})`;
+
 
       // ============================
       // 🔸 Calcul du kWh (avec correction si anormal)
@@ -1600,6 +1714,12 @@ if (
       if (!isFinite(tonnage)) tonnage = 0;
       tr.dataset.tonnage = Number(tonnage.toFixed(1));
 
+
+
+updateGazTotals();
+
+
+      
     } catch (err) {
       console.warn("Erreur GAZ:", err);
     }
@@ -2379,6 +2499,37 @@ document.getElementById("exportExcelGazBtn").addEventListener("click", function 
 
 
 
+
+
+
+// === Fonction de cumul global des GAZ ===
+function updateGazTotals() {
+  const totalM3Span = document.querySelector(".gaz-total-m3");
+  const totalKwhSpan = document.querySelector(".gaz-total-kwh");
+  if (!totalM3Span || !totalKwhSpan) return; // pas de pastilles visibles
+
+  let totalM3 = 0;
+  let totalKwh = 0;
+
+  document.querySelectorAll(".gaz-group").forEach(group => {
+    const btns = group.querySelectorAll(".gaz-btn");
+    if (btns.length >= 2) {
+      const m3Text = btns[1].textContent.replace(/[^\d.]/g, "");
+      const kwhText = btns[0].textContent.replace(/[^\d.]/g, "");
+      const m3 = parseFloat(m3Text);
+      const kwh = parseFloat(kwhText);
+      if (isFinite(m3)) totalM3 += m3;
+      if (isFinite(kwh)) totalKwh += kwh;
+    }
+  });
+
+  totalM3Span.textContent = `m³ total: ${totalM3.toFixed(1)}`;
+  totalKwhSpan.textContent = `kWh total: ${Math.round(totalKwh).toLocaleString("fr-FR")}`;
+}
+
+
+  
+
 /* ----------- Init ----------- */
 window.onload=()=>{
   updateNetworkStatus();
@@ -2433,20 +2584,42 @@ function clearBrowserCache() {
 }
 </script>
 
-<!-- === Bouton caché de vidage du cache === -->
-<button id="clearCacheBtn"
-  onclick="clearBrowserCache()"
+<div id="visitCounter"
   style="position:fixed;bottom:10px;left:10px;
-  opacity:1;
-  background:#ffd54f;
-  border-radius:50%;
+  background:#ffd54f;color:#5d4037;
+  border-radius:12px;padding:4px 10px;
   box-shadow:0 0 6px rgba(0,0,0,0.2);
-  width:25px;height:25px;cursor:pointer;z-index:2000;">
-  🧽
-</button>
+  font-size:12px;font-weight:bold;z-index:2000;">
+  👁️ Chargement...
+</div>
+
+<script>
+fetch("https://smes21540.netlify.app/.netlify/functions/visits?site=Oxyane")
+  .then(r => r.json())
+  .then(d => {
+    const el = document.getElementById("visitCounter");
+    el.textContent = `👁️ ${d.visits} visite${d.visits > 1 ? "s" : ""} cette semaine`;
+  })
+  .catch(err => {
+    console.error("Erreur compteur:", err);
+    document.getElementById("visitCounter").textContent = "👁️ --";
+  });
+</script>
+
+
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
 
 
 
