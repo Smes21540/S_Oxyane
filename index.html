@@ -563,6 +563,40 @@ body[data-theme="orange"] #smes-footer-bg {
 <div id="spinner"></div>
 
 
+
+
+<!-- Login modal -->
+<div id="loginOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:5000; align-items:center; justify-content:center;">
+  <div style="background:#fff; width:min(420px,92vw); border-radius:12px; padding:16px 16px 12px; box-shadow:0 10px 30px rgba(0,0,0,.25);">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+      <div style="font-weight:800; font-size:16px;">Connexion</div>
+      <div id="loginTenantLabel" style="opacity:.7; font-size:12px;"></div>
+    </div>
+
+    <div style="margin-top:12px; display:grid; gap:10px;">
+      <label style="display:grid; gap:6px;">
+        <span style="font-size:12px; opacity:.75;">Identifiant</span>
+        <input id="loginUser" autocomplete="username" style="padding:10px; border:1px solid #ddd; border-radius:10px; font-size:14px;">
+      </label>
+
+      <label style="display:grid; gap:6px;">
+        <span style="font-size:12px; opacity:.75;">Mot de passe</span>
+        <input id="loginPass" type="password" autocomplete="current-password" style="padding:10px; border:1px solid #ddd; border-radius:10px; font-size:14px;">
+      </label>
+
+      <div style="display:flex; gap:10px; align-items:center; justify-content:space-between; margin-top:4px;">
+        <div id="loginError" style="color:#b00020; font-size:12px; min-height:16px;"></div>
+        <button id="loginBtn" style="background:#ff7043; color:#fff; border:none; border-radius:10px; padding:10px 14px; font-weight:800; cursor:pointer;">
+          Se connecter
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  
+
 <!-- Sidebar dossiers -->
 <div id="sidebar">
   <div id="smes-footer-bg"></div>
@@ -591,8 +625,6 @@ body[data-theme="orange"] #smes-footer-bg {
     <button id="downloadFolderBtn">Télécharger le dossier</button>
     <button id="exportCsvBtn" style="display:none;">Graphique</button>
     <button id="exportExcelGazBtn" style="display:none;">Export Excel</button>
-    <button id="exportCsvBtn" style="display:none;" title="Voir les barres graphiques de consommation par jour">Graphique</button>
-    <button id="exportExcelGazBtn" style="display:none;" title="Exporter les données en Excel (kWh, m³, durée, tonnage)">Export Excel</button>
 
 
 
@@ -621,9 +653,10 @@ body[data-theme="orange"] #smes-footer-bg {
 
         <tbody>
           <tr>
-            <td colspan="5" style="text-align:left;">
-              <span class="arrow-hint">⬅</span> Sélectionner un dossier...
-            </td>
+<td colspan="6" style="text-align:left;">
+  <span class="arrow-hint">⬅</span> Sélectionner un dossier...
+</td>
+
           </tr>
         </tbody>
       </table>
@@ -669,7 +702,12 @@ body[data-theme="orange"] #smes-footer-bg {
 
 <script>
 /* ----------- Config Drive ----------- */
-const ROOT_FOLDER_ID="18QkQPyCZxTCAaoz_qd1wAelmQbSE4ex8";
+// --- Multi-tenant / Auth ---
+const NETLIFY_DRIVE = "https://smes21540.netlify.app/.netlify/functions/drive";
+let APP_CFG = null;              // config.json
+let AUTH_TOKEN = null;           // token reçu après login
+let ROOT_FOLDER_ID = null;       // root drive du tenant (issu de config)
+
 // ✅ Active/désactive les calculs de consommation gaz
 const ENABLE_GAZ_CALC = true;  // ← passe à false pour désactiver
 
@@ -863,47 +901,166 @@ function showEventAlert(msg="✅ Événements chargés") {
 }
 
 
+function getTenantFromPath() {
+  // /S_Oxyane/ -> "S_Oxyane"
+  const p = location.pathname.split("/").filter(Boolean);
+  return p.length ? p[0] : "";
+}
+
+async function loadAppConfig() {
+  const res = await fetch("./config.json", { cache: "no-store" });
+  if (!res.ok) throw new Error("config.json introuvable");
+  APP_CFG = await res.json();
+  ROOT_FOLDER_ID = APP_CFG.driveRootId;
+  const tenantLabel = document.getElementById("loginTenantLabel");
+  if (tenantLabel) tenantLabel.textContent = APP_CFG.tenant || getTenantFromPath();
+}
+
+function showLogin() {
+  document.getElementById("loginOverlay").style.display = "flex";
+}
+function hideLogin() {
+  document.getElementById("loginOverlay").style.display = "none";
+}
+function setLoginError(msg) {
+  const el = document.getElementById("loginError");
+  if (el) el.textContent = msg || "";
+}
+
+async function login(username, password) {
+  setLoginError("");
+  const tenant = APP_CFG?.tenant || getTenantFromPath();
+
+  const res = await fetch(NETLIFY_DRIVE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "login",
+      tenant,
+      login: username,
+      password
+    })
+  });
+
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(txt || `Login refusé (${res.status})`);
+  }
+  const data = await res.json();
+  if (!data?.token) throw new Error("Token manquant côté serveur");
+  AUTH_TOKEN = data.token;
+  sessionStorage.setItem("auth_token", AUTH_TOKEN);
+}
+
+
+
+document.getElementById("loginBtn").addEventListener("click", async ()=>{
+  const u = document.getElementById("loginUser").value.trim();
+  const p = document.getElementById("loginPass").value;
+
+  if (!u || !p) { setLoginError("Identifiant et mot de passe requis."); return; }
+
+  try {
+    await login(u, p);
+    hideLogin();
+    await loadRootFolders();
+  } catch (e) {
+    setLoginError("Connexion refusée.");
+  }
+});
+
+document.getElementById("loginPass").addEventListener("keydown", (e)=>{
+  if (e.key === "Enter") document.getElementById("loginBtn").click();
+});
+
+
+  
+
+function authHeaders() {
+  if (!AUTH_TOKEN) AUTH_TOKEN = sessionStorage.getItem("auth_token");
+  return { Authorization: `Bearer ${AUTH_TOKEN}` };
+}
+
+async function downloadViaProxy(fileId, fileName) {
+  const url = `${NETLIFY_DRIVE}?id=${encodeURIComponent(fileId)}&name=${encodeURIComponent(fileName||"")}`;
+  const res = await fetch(url, { headers: authHeaders() });
+  if (!res.ok) throw new Error("Téléchargement refusé");
+  const blob = await res.blob();
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName || "download";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+
+async function openPdfViaProxy(fileId, fileName){
+  const url = `${NETLIFY_DRIVE}?id=${encodeURIComponent(fileId)}&name=${encodeURIComponent(fileName||"")}`;
+  const res = await fetch(url, { headers: authHeaders() });
+  if (!res.ok) throw new Error("PDF refusé");
+  const blob = await res.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  document.getElementById('modalFrame').src = blobUrl;
+}
+
+
+
+  
+
 /* ----------- Drive API ----------- */
 async function fetchFolderContents(folderId){
   if(!navigator.onLine){updateNetworkStatus();return [];}
   showSpinner();
   try{
-    const res = await fetch(`https://smes21540.netlify.app/.netlify/functions/drive?list=true&id=${folderId}&site=Smes_Acces`);
+    if (!AUTH_TOKEN) {
+      AUTH_TOKEN = sessionStorage.getItem("auth_token");
+    }
+    if (!AUTH_TOKEN) {
+      showLogin();
+      return [];
+    }
 
-    // 🚫 Blocage abonnement
-    if (res.status === 403) {
-      alert("⛔ Accès suspendu : merci de régulariser votre abonnement.");
+    const url = `${NETLIFY_DRIVE}?list=true&id=${encodeURIComponent(folderId)}`;
+
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${AUTH_TOKEN}` }
+    });
+
+    if (res.status === 401) {
+      sessionStorage.removeItem("auth_token");
+      AUTH_TOKEN = null;
+      showLogin();
       hideSpinner();
       return [];
     }
 
-    // 🔎 Autre erreur HTTP
+    if (res.status === 403) {
+      alert("⛔ Accès interdit (périmètre ou abonnement).");
+      hideSpinner();
+      return [];
+    }
+
     if (!res.ok) {
       console.error("Erreur proxy Drive:", res.status, res.statusText);
-      alert("Erreur réseau ou proxy. Vérifie ta connexion ou ton accès.");
+      alert("Erreur réseau/proxy.");
       hideSpinner();
       return [];
     }
 
-    // ✅ Lecture JSON si tout va bien
     const data = await res.json();
-    if (data.error) {
-      console.error("Erreur Google Drive API:", data.error);
-      alert("Erreur Drive (proxy). Ouvre la console pour le détail.");
-      hideSpinner();
-      return [];
-    }
-
     return data.files || [];
 
   } catch(e){
     console.error("Erreur Drive:", e);
-    alert("Erreur interne ou blocage d’accès (proxy).");
+    alert("Erreur interne proxy.");
     return [];
   } finally{
     hideSpinner();
   }
 }
+
 
 
 
@@ -1537,8 +1694,8 @@ const tdFolder=document.createElement('td'); tdFolder.textContent=folderName;
     const tdAction=document.createElement('td'); tdAction.className='action-cell';
     let html='';
 if(f.name.toLowerCase().endsWith('.csv')){
-  html+=`<a href="https://drive.google.com/uc?export=download&id=${f.id}" target="_blank"><button class="action-btn">Télécharger</button></a>`;
-  html+=`<button class="action-btn" onclick="openViewer('viewer.html','${f.id}','${f.name}')">Tableau</button>`;
+  html+=`<button class="action-btn" data-dl="${f.id}" data-name="${encodeURIComponent(f.name)}">Télécharger</button>`;
+  html+=`<button class="action-btn" onclick="openViewer('viewer.html','${f.id}','${encodeURIComponent(f.name)}')">Tableau</button>`;
 
   // 👇 bouton Courbes seulement si on n'est PAS dans Historique
   if (!folderName.toLowerCase().includes("historique")) {
@@ -1782,23 +1939,39 @@ updateGazTotals();
 
 
     if(/\.(jpg|jpeg)$/i.test(f.name)){
-      html+=`<img src="https://drive.google.com/thumbnail?id=${f.id}" onclick="openModal('${f.id}')" alt="aperçu">`;
-      html+=`<a href="https://drive.google.com/uc?export=download&id=${f.id}" target="_blank"><button class="action-btn">Télécharger</button></a>`;
-    }
+  html+=`<img src="https://drive.google.com/thumbnail?id=${f.id}" onclick="openModal('${f.id}', 'image', decodeURIComponent('${encodeURIComponent(f.name)}'))" alt="aperçu">`;
+  html+=`<button class="action-btn" data-dl="${f.id}" data-name="${encodeURIComponent(f.name)}">Télécharger</button>`;
+}
 
 // === PDF ===
 if (f.name.toLowerCase().endsWith(".pdf")) {
   html += `
-    <a href="https://drive.google.com/uc?export=download&id=${f.id}" target="_blank">
-      <button class="action-btn">Télécharger</button>
-    </a>
-    <button class="action-btn" onclick="openModal('${f.id}', 'pdf')">Ouvrir</button>
+    <button class="action-btn" data-dl="${f.id}" data-name="${encodeURIComponent(f.name)}">Télécharger</button>
+    <button class="action-btn" data-openpdf="${f.id}" data-name="${encodeURIComponent(f.name)}">Ouvrir</button>
   `;
 }
 
 
     tdAction.innerHTML=html;
 
+// 🔐 Handlers sécurisés (download via proxy + PDF via proxy)
+tdAction.querySelectorAll("[data-dl]").forEach(btn=>{
+  btn.addEventListener("click", async ()=>{
+    try { await downloadViaProxy(btn.dataset.dl, decodeURIComponent(btn.dataset.name || "")); }
+    catch(e){ alert("Téléchargement refusé."); }
+  });
+});
+
+tdAction.querySelectorAll("[data-openpdf]").forEach(btn=>{
+  btn.addEventListener("click", async ()=>{
+    try { openModal(btn.dataset.openpdf, "pdf", decodeURIComponent(btn.dataset.name || "")); }
+    catch(e){ alert("Ouverture refusée."); }
+  });
+});
+
+
+
+  
 
 tr.appendChild(tdDate);
     tr.appendChild(tdFlame);
@@ -1925,29 +2098,39 @@ function clearFilter(){
 }
 
 /* ----------- Modale images + navigation clavier ----------- */
-function openModal(id, type = "image") {
+function openModal(id, type = "image", name = "") {
   const modal = document.getElementById('imageModal');
   modal.style.display = 'block';
   const frame = document.getElementById('modalFrame');
 
-  // 🔍 Détermine le mode d'affichage selon le type
   if (type === "pdf") {
-    frame.src = `https://drive.google.com/file/d/${id}/preview#toolbar=0`; // ouvre le PDF dans l'iframe
+    openPdfViaProxy(id, name).catch(()=>{ frame.src=""; });
   } else {
-    frame.src = `https://drive.google.com/file/d/${id}/preview`;
+    frame.src = `https://drive.google.com/file/d/${id}/preview`; // (on sécurisera images après)
   }
 
   currentImageIndex = imageFiles.findIndex(f => f.id === id);
 
-  // 🔽 Bouton de téléchargement
   document.getElementById('downloadBtn').onclick = () =>
-    window.open(`https://drive.google.com/uc?export=download&id=${id}`, '_blank');
+    downloadViaProxy(id, name).catch(()=>alert("Téléchargement refusé."));
 }
+
 
 function closeModal(){document.getElementById('imageModal').style.display='none';}
 
-document.getElementById('prevBtn').onclick=()=>{if(currentImageIndex>0) openModal(imageFiles[--currentImageIndex].id);};
-document.getElementById('nextBtn').onclick=()=>{if(currentImageIndex<imageFiles.length-1) openModal(imageFiles[++currentImageIndex].id);};
+document.getElementById('prevBtn').onclick = () => {
+  if (currentImageIndex > 0) {
+    const f = imageFiles[--currentImageIndex];
+    openModal(f.id, "image", f.name);
+  }
+};
+
+document.getElementById('nextBtn').onclick = () => {
+  if (currentImageIndex < imageFiles.length - 1) {
+    const f = imageFiles[++currentImageIndex];
+    openModal(f.id, "image", f.name);
+  }
+};
 window.addEventListener('click',e=>{if(e.target===document.getElementById('imageModal')) closeModal();});
 
 // Navigation clavier quand la modale est ouverte
@@ -2580,33 +2763,37 @@ function updateGazTotals() {
   
 
 /* ----------- Init ----------- */
-window.onload=()=>{
+window.onload = async () => {
   updateNetworkStatus();
-  const savedTheme=localStorage.getItem("selectedTheme")||"orange";
+  const savedTheme = localStorage.getItem("selectedTheme") || "orange";
   setTheme(savedTheme);
 
-  // bouton "Télécharger le dossier" caché par défaut tant qu'aucun contenu
-  document.getElementById("downloadFolderBtn").style.display="none";
+  document.getElementById("downloadFolderBtn").style.display = "none";
 
-  loadRootFolders();
+  await loadAppConfig();                 // ✅ charge config.json → ROOT_FOLDER_ID
+  AUTH_TOKEN = sessionStorage.getItem("auth_token");
+
+  if (!AUTH_TOKEN) {
+    showLogin();                         // ✅ bloque tant que pas loggé
+  } else {
+    await loadRootFolders();             // ✅ OK
+  }
+
   initDatePickers();
-const last = localStorage.getItem("lastFolderId");
-if (last) {
-  // attendre un peu que l'arborescence soit rendue
-  setTimeout(() => {
-    const li = document.querySelector(`#folderTree li[data-id="${last}"]`);
-    if (li) {
-      loadFolderFilesOnClick(li);
-    } else {
-      console.warn("[INIT] Impossible de retrouver le dernier dossier ouvert :", last);
-    }
-  }, 1200);
-}
 
+  const last = localStorage.getItem("lastFolderId");
+  if (last && AUTH_TOKEN) {
+    setTimeout(() => {
+      const li = document.querySelector(`#folderTree li[data-id="${last}"]`);
+      if (li) loadFolderFilesOnClick(li);
+      else console.warn("[INIT] Impossible de retrouver le dernier dossier ouvert :", last);
+    }, 1200);
+  }
 };
 
 
-<!-- === FIN DE TON SCRIPT PRINCIPAL === -->
+
+// === FIN DE TON SCRIPT PRINCIPAL ===
 </script>
 
 <!-- === Fonction de nettoyage du cache === -->
