@@ -589,10 +589,8 @@ body[data-theme="orange"] #smes-footer-bg {
     <button onclick="applyFilter()">Filtrer</button>
     <button onclick="clearFilter()">Tout afficher</button>
     <button id="downloadFolderBtn">Télécharger le dossier</button>
-    <button id="exportCsvBtn" style="display:none;">Graphique</button>
-    <button id="exportExcelGazBtn" style="display:none;">Export Excel</button>
-    <button id="exportCsvBtn" style="display:none;" title="Voir les barres graphiques de consommation par jour">Graphique</button>
-    <button id="exportExcelGazBtn" style="display:none;" title="Exporter les données en Excel (kWh, m³, durée, tonnage)">Export Excel</button>
+<button id="exportCsvBtn" style="display:none;" title="Voir les barres graphiques de consommation par jour">Graphique</button>
+<button id="exportExcelGazBtn" style="display:none;" title="Exporter les données en Excel (kWh, m³, durée, tonnage)">Export Excel</button>
 
 
 
@@ -684,7 +682,7 @@ let storedNotes = {};
 const FLAME_THRESHOLD = 40.0;   // seuil déclencheur de la flamme 🔥
 
 /* ----------- État ----------- */
-let imageFiles=[], currentImageIndex=0;
+let previewFiles = [], currentPreviewIndex = 0;
 let filterStartDate="", filterEndDate="";
 let themeMenuTimer;
 let cancelScan = false; // 🛑 permet d’arrêter le scan si on clique ailleurs
@@ -1224,8 +1222,9 @@ document.querySelectorAll('#csvTable tbody tr').forEach(tr => {
   }
 }
 
-imageFiles = filtered.filter(f => /\.(jpg|jpeg)$/i.test(f.name)); 
+previewFiles = filtered.filter(f => /\.(jpg|jpeg|pdf)$/i.test(f.name));
 displayFiles(filtered, nameSpan ? nameSpan.textContent : '');
+
 
 
 // 🪄 Applique immédiatement les flammes du cache si déjà chargé pour ce site
@@ -1242,7 +1241,7 @@ if (Object.keys(hotDaysMap).length > 0) {
   });
 }
 
-
+}
 
 async function displayFiles(files, folderName){
 
@@ -1250,6 +1249,15 @@ async function displayFiles(files, folderName){
   const downloadBtn=document.getElementById('downloadFolderBtn');
   tbody.innerHTML='';
 
+
+  document.querySelector(".controls").style.display = "flex";
+
+  const gazTasks = []; // ✅ ICI (une seule fois)
+
+
+
+
+  
   // ✅ Afficher les filtres uniquement dans un dossier final (contenant des fichiers)
 document.querySelector(".controls").style.display = "flex";
 
@@ -1551,14 +1559,16 @@ if(f.name.toLowerCase().endsWith('.csv')){
   }
 }
 
-// === CONSOMMATION GAZ : calcul kWh + durée réelle ===
+
+
+
+// === CONSOMMATION GAZ : placeholders + queue task ===
 if (
   ENABLE_GAZ_CALC &&
   folderName.toLowerCase().includes("consommation gaz") &&
   f.name.toLowerCase().endsWith(".csv")
 ) {
-
-  // 🟡 Groupe de 4 boutons d'affichage
+  // 🟡 Groupe de 4 boutons d'affichage (placeholders)
   html += `
     <div class="gaz-group">
       <button class="gaz-btn" title="kWh consommés sur la journée" disabled>⏳ kWh...</button>
@@ -1568,211 +1578,16 @@ if (
     </div>
   `;
 
-  (async () => {
-    try {
-      const res = await fetch(
-        `https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`
-      );
-
-      const text = await res.text();
-      const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
-
-      let diffMinutes = 0;
-      let diffKwh = 0;
-      let diffM3 = 0;
-      let kwhEstime = false;
-
-      if (lines.length > 2) {
-        const firstCols = lines[1].split(",");
-        const lastCols  = lines[lines.length - 1].split(",");
-
-        // --- 1️⃣ Calcul KWh brut ---
-        const kFirst = parseFloat(firstCols[2].replace(/"/g,""));
-        const kLast  = parseFloat(lastCols[2].replace(/"/g,""));
-        if (isFinite(kFirst) && isFinite(kLast)) diffKwh = kLast - kFirst;
-
-        // --- 2️⃣ Calcul m³ ---
-        const m3First = parseFloat(firstCols[4].replace(/"/g,""));
-        const m3Last  = parseFloat(lastCols[4].replace(/"/g,""));
-        if (isFinite(m3First) && isFinite(m3Last)) diffM3 = m3Last - m3First;
-
-        // --- 3️⃣ Durée de fonctionnement ---
-        let active = 0;
-        for (let i = 1; i < lines.length; i++) {
-          const prev = lines[i - 1].split(",");
-          const curr = lines[i].split(",");
-          const kPrev = parseFloat(prev[2].replace(/"/g,""));
-          const kCurr = parseFloat(curr[2].replace(/"/g,""));
-          if (isFinite(kPrev) && isFinite(kCurr) && kCurr > kPrev) active++;
-        }
-        diffMinutes = active;
-      }
-
-      const H = String(Math.floor(diffMinutes / 60)).padStart(2,"0");
-      const M = String(diffMinutes % 60).padStart(2,"0");
-      const dureeFormatee = `${H}:${M}`;
-
-
-/********************************************************************************************
- * ⚠️⚠️⚠️ BLOC DE CORRECTION TEMPORAIRE - FICHIERS CSV CORROMPUS ⚠️⚠️⚠️
- * -----------------------------------------------------------------------------------------
- * Les jours suivants contiennent des données fausses (décalées d’un jour) :
- *   - 21/09
- *   - 28/09
- *   - 05/10
- *   - 12/10
- *   - 19/10
- * On force ces jours à zéro (0 m³, 0 kWh, 0 durée).
- * À SUPPRIMER LORSQUE LES CSV SERONT CORRIGÉS SUR LE DRIVE.
- ********************************************************************************************/
-
-try {
-  // Extraire la date directement depuis le nom du fichier CSV
-  const m = f.name.match(/(\d{8})/);
-  if (m) {
-    const yyyy = m[1].slice(0, 4);
-    const mm = m[1].slice(4, 6);
-    const dd = m[1].slice(6, 8);
-    const shortDate = `${dd}/${mm}`;
-    const badDates = ["21/09", "28/09", "05/10", "12/10", "19/10"];
-    if (badDates.includes(shortDate)) {
-      console.warn("⚠️ Fichier CSV corrompu détecté :", shortDate, "→ valeurs forcées à 0");
-      diffKwh = 0;
-      diffM3 = 0;
-      diffMinutes = 0;
-    }
-  }
-} catch (err) {
-  console.warn("Erreur dans le bloc de correction CSV:", err);
+  // ✅ on calcule APRÈS que la ligne est dans le DOM
+  gazTasks.push({ f, tdAction, tr, tdDate });
 }
-
-/********************************************************************************************
- * ⚠️⚠️⚠️ FIN DU BLOC DE CORRECTION TEMPORAIRE - À SUPPRIMER PLUS TARD ⚠️⚠️⚠️
- ********************************************************************************************/
-
 
 
 
 
       
-      const btns = tdAction.querySelectorAll(".gaz-btn");
-      const btnKwh    = btns[0];
-      const btnM3     = btns[1];
-      const btnHeures = btns[2];
-      const btnAvg    = btns[3];
-
-      // ============================
-      // 🔸 Si aucune activité : on masque tout
-      // ============================
-      if ((diffM3 === 0 || !isFinite(diffM3)) && (diffKwh === 0 || !isFinite(diffKwh))) {
-        btns.forEach(b => b.style.display = "none");
-        return;
-      }
-
-      // ============================
-// 🔸 Affichage m³ avec dégradé dynamique selon la valeur
-btnM3.textContent = diffM3.toFixed(1) + " m³";
-btnM3.style.minWidth = "125px";
-btnM3.style.color = "#5d4037";
-
-// Couleurs de base (de jaune → rouge)
-const minM3 = 1000;
-const maxM3 = 5000;
-let ratio = (diffM3 - minM3) / (maxM3 - minM3);
-ratio = Math.max(0, Math.min(1, ratio)); // clamp entre 0 et 1
-
-// Interpolation entre jaune (255,245,157) et rouge (255,112,67)
-const r1 = 255, g1 = 245, b1 = 157; // jaune
-const r2 = 255, g2 = 112, b2 = 67;  // rouge
-const r = Math.round(r1 + (r2 - r1) * ratio);
-const g = Math.round(g1 + (g2 - g1) * ratio);
-const b = Math.round(b1 + (b2 - b1) * ratio);
-const color1 = `rgb(${r},${g},${b})`;
-const color2 = `rgb(${Math.max(r-20,0)},${Math.max(g-20,0)},${Math.max(b-20,0)})`;
-
-btnM3.style.background = `linear-gradient(180deg, ${color1}, ${color2})`;
 
 
-      // ============================
-      // 🔸 Calcul du kWh (avec correction si anormal)
-      // ============================
-      let rounded = Math.round(diffKwh);
-      if (rounded < 0 || rounded > 400000) {
-        rounded = Math.round(diffM3 * 32.3);
-        kwhEstime = true;
-      }
-
-      // ============================
-      // 🔸 Durée de chauffe
-      // ============================
-      btnHeures.textContent = `⏱ ${dureeFormatee}`;
-      btnHeures.style.background = "linear-gradient(180deg, #bbdefb, #64b5f6)";
-      btnHeures.style.color = "#0d47a1";
-      btnHeures.style.minWidth = "120px";
-
-      // ============================
-      // 🔸 Moyenne kWh/h
-      // ============================
-      const hours = diffMinutes / 60;
-      let avg = 0;
-      let moyenneEstimee = false;
-
-      if (hours > 0 && rounded > 0) {
-        avg = rounded / hours;
-
-        // 🚨 Correction si moyenne incohérente
-        if (avg < 1000) {
-          rounded = Math.round(diffM3 * 32.3); // recalcule un kWh cohérent
-          avg = rounded / hours;
-          moyenneEstimee = true;
-          kwhEstime = true;
-        }
-
-        btnAvg.textContent = `${avg.toFixed(1)} kWh/h`;
-      } else {
-        btnAvg.textContent = "--";
-      }
-
-      // ============================
-      // 🔸 Affichage du kWh (normal ou estimé)
-      // ============================
-      const padded = String(rounded).padStart(7, " ");
-      btnKwh.textContent = `${padded} kWh`;
-      btnKwh.style.minWidth = "120px";
-
-      if (kwhEstime || moyenneEstimee) {
-        btnKwh.style.background = "linear-gradient(180deg, #bbdefb, #42a5f5)";
-        btnKwh.style.color = "#0d47a1";
-        btnAvg.style.background = "linear-gradient(180deg, #c5cae9, #7986cb)";
-        btnAvg.style.color = "#1a237e";
-      } else {
-        btnKwh.style.background = "linear-gradient(180deg, #ffd54f, #ffb300)";
-        btnKwh.style.color = "#3e2723";
-        btnAvg.style.background = "linear-gradient(180deg, #e1f5fe, #81d4fa)";
-        btnAvg.style.color = "#01579b";
-      }
-
-      // ============================
-      // 🔸 TONNAGE
-      // ============================
-      const dateStr = tdDate.textContent.split(" ")[0];
-      const fullPath = localStorage.getItem("lastFolderPath") || "";
-      const siteRoot = fullPath.split("/")[0];
-      let tonnage = await getTonnageForDate(siteRoot, dateStr);
-      if (!isFinite(tonnage)) tonnage = 0;
-      tr.dataset.tonnage = Number(tonnage.toFixed(1));
-
-
-
-updateGazTotals();
-
-
-      
-    } catch (err) {
-      console.warn("Erreur GAZ:", err);
-    }
-  })();
-}
 
 
 
@@ -1792,7 +1607,8 @@ if (f.name.toLowerCase().endsWith(".pdf")) {
     <a href="https://drive.google.com/uc?export=download&id=${f.id}" target="_blank">
       <button class="action-btn">Télécharger</button>
     </a>
-    <button class="action-btn" onclick="openModal('${f.id}', 'pdf')">Ouvrir</button>
+    <button class="action-btn" onclick="openModal('${f.id}')">Ouvrir</button>
+
   `;
 }
 
@@ -1810,9 +1626,21 @@ tr.appendChild(tdSize);
 
     tbody.appendChild(tr);
   }
+
+// ✅ Lancer les calculs gaz avec limite de concurrence
+if (gazTasks.length) {
+  await runWithConcurrency(gazTasks, 6, computeGazForRow);
+  updateGazTotals();
+
+
+  
 }
 }
 
+
+
+
+  
 /* ----------- Open viewer (CSV list + index) ----------- */
 async function openViewer(viewer, id, name){
   cancelScan = true; // 🛑 stoppe immédiatement tous les scans
@@ -1924,41 +1752,58 @@ function clearFilter(){
   if(active) active.click();
 }
 
+function getPreviewType(fileName){
+  return /\.pdf$/i.test(fileName) ? "pdf" : "image";
+}
+
+
+  
 /* ----------- Modale images + navigation clavier ----------- */
-function openModal(id, type = "image") {
+function openModal(id) {
   const modal = document.getElementById('imageModal');
   modal.style.display = 'block';
   const frame = document.getElementById('modalFrame');
 
-  // 🔍 Détermine le mode d'affichage selon le type
-  if (type === "pdf") {
-    frame.src = `https://drive.google.com/file/d/${id}/preview#toolbar=0`; // ouvre le PDF dans l'iframe
-  } else {
-    frame.src = `https://drive.google.com/file/d/${id}/preview`;
-  }
+  currentPreviewIndex = previewFiles.findIndex(f => f.id === id);
+  const file = previewFiles[currentPreviewIndex];
+  if (!file) return;
 
-  currentImageIndex = imageFiles.findIndex(f => f.id === id);
+  const type = getPreviewType(file.name);
 
-  // 🔽 Bouton de téléchargement
+  frame.src = (type === "pdf")
+    ? `https://drive.google.com/file/d/${id}/preview#toolbar=0`
+    : `https://drive.google.com/file/d/${id}/preview`;
+
   document.getElementById('downloadBtn').onclick = () =>
     window.open(`https://drive.google.com/uc?export=download&id=${id}`, '_blank');
 }
 
+
 function closeModal(){document.getElementById('imageModal').style.display='none';}
 
-document.getElementById('prevBtn').onclick=()=>{if(currentImageIndex>0) openModal(imageFiles[--currentImageIndex].id);};
-document.getElementById('nextBtn').onclick=()=>{if(currentImageIndex<imageFiles.length-1) openModal(imageFiles[++currentImageIndex].id);};
+document.getElementById('prevBtn').onclick = () => {
+  if (currentPreviewIndex > 0) openModal(previewFiles[--currentPreviewIndex].id);
+};
+document.getElementById('nextBtn').onclick = () => {
+  if (currentPreviewIndex < previewFiles.length - 1) openModal(previewFiles[++currentPreviewIndex].id);
+};
+
 window.addEventListener('click',e=>{if(e.target===document.getElementById('imageModal')) closeModal();});
 
 // Navigation clavier quand la modale est ouverte
 window.addEventListener('keydown', e=>{
   const modal=document.getElementById('imageModal');
   if(modal.style.display==='block'){
-    if(e.key==='ArrowLeft' && currentImageIndex>0){ openModal(imageFiles[--currentImageIndex].id); }
-    if(e.key==='ArrowRight' && currentImageIndex<imageFiles.length-1){ openModal(imageFiles[++currentImageIndex].id); }
+    if(e.key==='ArrowLeft' && currentPreviewIndex>0){
+      openModal(previewFiles[--currentPreviewIndex].id);
+    }
+    if(e.key==='ArrowRight' && currentPreviewIndex<previewFiles.length-1){
+      openModal(previewFiles[++currentPreviewIndex].id);
+    }
     if(e.key==='Escape'){ closeModal(); }
   }
 });
+
 
 /* ----------- ZIP overlay + progression + annulation ----------- */
 const zipOverlay=document.getElementById('zipOverlay');
@@ -2547,6 +2392,143 @@ document.getElementById("exportExcelGazBtn").addEventListener("click", function 
 
 
 
+// =========================================
+// === Calcule les valeurs GAZ pour une ligne
+// =========================================
+async function computeGazForRow({ f, tdAction, tr, tdDate }) {
+  const res = await fetch(
+    `https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`
+  );
+  if (!res.ok) throw new Error("Fetch CSV GAZ failed: " + res.status);
+
+  const text = await res.text();
+  const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+
+  let diffMinutes = 0;
+  let diffKwh = 0;
+  let diffM3 = 0;
+  let kwhEstime = false;
+
+  if (lines.length > 2) {
+    const firstCols = lines[1].split(",");
+    const lastCols  = lines[lines.length - 1].split(",");
+
+    // 1) kWh brut
+    const kFirst = parseFloat(firstCols[2].replace(/"/g,""));
+    const kLast  = parseFloat(lastCols[2].replace(/"/g,""));
+    if (isFinite(kFirst) && isFinite(kLast)) diffKwh = kLast - kFirst;
+
+    // 2) m³
+    const m3First = parseFloat(firstCols[4].replace(/"/g,""));
+    const m3Last  = parseFloat(lastCols[4].replace(/"/g,""));
+    if (isFinite(m3First) && isFinite(m3Last)) diffM3 = m3Last - m3First;
+
+    // 3) durée active (minutes)
+    let active = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const prev = lines[i - 1].split(",");
+      const curr = lines[i].split(",");
+      const kPrev = parseFloat(prev[2].replace(/"/g,""));
+      const kCurr = parseFloat(curr[2].replace(/"/g,""));
+      if (isFinite(kPrev) && isFinite(kCurr) && kCurr > kPrev) active++;
+    }
+    diffMinutes = active;
+  }
+
+  // Récup boutons
+  const btns = tdAction.querySelectorAll(".gaz-btn");
+  if (btns.length < 4) return;
+
+  const btnKwh    = btns[0];
+  const btnM3     = btns[1];
+  const btnHeures = btns[2];
+  const btnAvg    = btns[3];
+
+  // Si aucune activité -> masque
+  if ((diffM3 === 0 || !isFinite(diffM3)) && (diffKwh === 0 || !isFinite(diffKwh))) {
+    btns.forEach(b => b.style.display = "none");
+    return;
+  }
+
+  // Affichage m³ + dégradé
+  btnM3.textContent = diffM3.toFixed(1) + " m³";
+  btnM3.style.minWidth = "125px";
+  btnM3.style.color = "#5d4037";
+
+  const minM3 = 1000;
+  const maxM3 = 5000;
+  let ratio = (diffM3 - minM3) / (maxM3 - minM3);
+  ratio = Math.max(0, Math.min(1, ratio));
+
+  const r1 = 255, g1 = 245, b1 = 157;
+  const r2 = 255, g2 = 112, b2 = 67;
+  const r = Math.round(r1 + (r2 - r1) * ratio);
+  const g = Math.round(g1 + (g2 - g1) * ratio);
+  const b = Math.round(b1 + (b2 - b1) * ratio);
+  const color1 = `rgb(${r},${g},${b})`;
+  const color2 = `rgb(${Math.max(r-20,0)},${Math.max(g-20,0)},${Math.max(b-20,0)})`;
+  btnM3.style.background = `linear-gradient(180deg, ${color1}, ${color2})`;
+
+  // kWh (avec correction)
+  let rounded = Math.round(diffKwh);
+  if (rounded < 0 || rounded > 400000) {
+    rounded = Math.round(diffM3 * 32.3);
+    kwhEstime = true;
+  }
+
+  // durée
+  const H = String(Math.floor(diffMinutes / 60)).padStart(2,"0");
+  const M = String(diffMinutes % 60).padStart(2,"0");
+  const dureeFormatee = `${H}:${M}`;
+
+  btnHeures.textContent = `⏱ ${dureeFormatee}`;
+  btnHeures.style.background = "linear-gradient(180deg, #bbdefb, #64b5f6)";
+  btnHeures.style.color = "#0d47a1";
+  btnHeures.style.minWidth = "120px";
+
+  // moyenne kWh/h
+  const hours = diffMinutes / 60;
+  let avg = 0;
+  let moyenneEstimee = false;
+
+  if (hours > 0 && rounded > 0) {
+    avg = rounded / hours;
+    if (avg < 1000) {
+      rounded = Math.round(diffM3 * 32.3);
+      avg = rounded / hours;
+      moyenneEstimee = true;
+      kwhEstime = true;
+    }
+    btnAvg.textContent = `${avg.toFixed(1)} kWh/h`;
+  } else {
+    btnAvg.textContent = "--";
+  }
+
+  // affichage kWh
+  const padded = String(rounded).padStart(7, " ");
+  btnKwh.textContent = `${padded} kWh`;
+  btnKwh.style.minWidth = "120px";
+
+  if (kwhEstime || moyenneEstimee) {
+    btnKwh.style.background = "linear-gradient(180deg, #bbdefb, #42a5f5)";
+    btnKwh.style.color = "#0d47a1";
+    btnAvg.style.background = "linear-gradient(180deg, #c5cae9, #7986cb)";
+    btnAvg.style.color = "#1a237e";
+  } else {
+    btnKwh.style.background = "linear-gradient(180deg, #ffd54f, #ffb300)";
+    btnKwh.style.color = "#3e2723";
+    btnAvg.style.background = "linear-gradient(180deg, #e1f5fe, #81d4fa)";
+    btnAvg.style.color = "#01579b";
+  }
+
+  // TONNAGE (reprend ton code)
+  const dateStr = tdDate.textContent.split(" ")[0];
+  const fullPath = localStorage.getItem("lastFolderPath") || "";
+  const siteRoot = fullPath.split("/")[0];
+  let tonnage = await getTonnageForDate(siteRoot, dateStr);
+  if (!isFinite(tonnage)) tonnage = 0;
+  tr.dataset.tonnage = Number(tonnage.toFixed(1));
+}
 
 
 
@@ -2560,22 +2542,51 @@ function updateGazTotals() {
   let totalM3 = 0;
   let totalKwh = 0;
 
-  document.querySelectorAll(".gaz-group").forEach(group => {
-    const btns = group.querySelectorAll(".gaz-btn");
-    if (btns.length >= 2) {
-      const m3Text = btns[1].textContent.replace(/[^\d.]/g, "");
-      const kwhText = btns[0].textContent.replace(/[^\d.]/g, "");
-      const m3 = parseFloat(m3Text);
-      const kwh = parseFloat(kwhText);
-      if (isFinite(m3)) totalM3 += m3;
-      if (isFinite(kwh)) totalKwh += kwh;
-    }
-  });
+document.querySelectorAll("#csvTable tbody tr").forEach(tr => {
+  if (tr.style.display === "none") return;  // ne compte pas les lignes filtrées
+  const group = tr.querySelector(".gaz-group");
+  if (!group) return;
+
+  const btns = group.querySelectorAll(".gaz-btn");
+  if (btns.length >= 2) {
+    const m3Text = btns[1].textContent.replace(/[^\d.]/g, "");
+    const kwhText = btns[0].textContent.replace(/[^\d.]/g, "");
+    const m3 = parseFloat(m3Text);
+    const kwh = parseFloat(kwhText);
+    if (isFinite(m3)) totalM3 += m3;
+    if (isFinite(kwh)) totalKwh += kwh;
+  }
+});
+
 
   totalM3Span.textContent = `m³ total: ${totalM3.toFixed(1)}`;
   totalKwhSpan.textContent = `kWh total: ${Math.round(totalKwh).toLocaleString("fr-FR")}`;
 }
 
+// === Limiteur de concurrence (évite 200 fetch en même temps) ===
+async function runWithConcurrency(tasks, limit, worker) {
+  let i = 0;
+  const executing = new Set();
+
+  async function enqueue() {
+    if (i >= tasks.length) return;
+    const task = tasks[i++];
+
+    const p = (async () => worker(task))()
+      .catch(err => console.warn("[GAZ] task failed:", err))
+      .finally(() => executing.delete(p));
+
+    executing.add(p);
+
+    if (executing.size >= limit) {
+      await Promise.race(executing);
+    }
+    await enqueue();
+  }
+
+  await enqueue();
+  await Promise.all([...executing]);
+}
 
   
 
@@ -2606,7 +2617,6 @@ if (last) {
 };
 
 
-<!-- === FIN DE TON SCRIPT PRINCIPAL === -->
 </script>
 
 <!-- === Fonction de nettoyage du cache === -->
@@ -2642,6 +2652,12 @@ function clearBrowserCache() {
 
 </body>
 </html>
+
+
+
+
+
+
 
 
 
