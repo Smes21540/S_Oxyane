@@ -629,25 +629,18 @@ body[data-theme="orange"] #smes-footer-bg {
     </div>
   </div>
 
-  <div class="controls">
-    Filtrer par date : 
-    <div class="date-field"><span id="iconStart">📅</span><input type="date" id="startDate"></div>
-    à
-    <div class="date-field"><span id="iconEnd">📅</span><input type="date" id="endDate"></div>
-    <button onclick="applyFilter()">Filtrer</button>
-    <button onclick="clearFilter()">Tout afficher</button>
-    <button id="downloadFolderBtn">Télécharger le dossier</button>
-<button id="exportCsvBtn" style="display:none;" title="Voir les barres graphiques de consommation par jour">Graphique</button>
-<button id="exportExcelGazBtn" style="display:none;" title="Exporter les données en Excel (kWh, m³, durée, tonnage)">Export Excel</button>
+<div class="controls">
+  Filtrer par date : 
+  <div class="date-field"><span id="iconStart">📅</span><input type="date" id="startDate"></div>
+  à
+  <div class="date-field"><span id="iconEnd">📅</span><input type="date" id="endDate"></div>
 
+  <button onclick="clearFilter()">Tout afficher</button>
+  <button id="downloadFolderBtn">Télécharger le dossier</button>
+  <button id="exportCsvBtn" style="display:none;" title="Voir les barres graphiques de consommation par jour">Graphique</button>
+  <button id="exportExcelGazBtn" style="display:none;" title="Exporter les données en Excel (kWh, m³, durée, tonnage)">Export Excel</button>
+</div>
 
-
-
-
-
-    
-
-  </div>
 
   <div id="tableWrapper">
     <div id="tableContainer">
@@ -1836,22 +1829,44 @@ localStorage.setItem("currentFolderPath", folderPath);
 
 
 /* ----------- Filtres ----------- */
-function applyFilter(){
-  filterStartDate=document.getElementById('startDate').value;
-  filterEndDate=document.getElementById('endDate').value;
-  const active=document.querySelector('#folderTree .active-folder');
-  if(active) active.click();
-}
-function clearFilter(){
-  filterStartDate=''; filterEndDate='';
-  document.getElementById('startDate').value=''; document.getElementById('endDate').value='';
-  const active=document.querySelector('#folderTree .active-folder');
-  if(active) active.click();
+async function refreshCurrentFolder(){
+
+  const folderId = localStorage.getItem("lastFolderId");
+  if (!folderId) return;
+
+  // On retrouve le dossier actif
+  const li = document.querySelector(`#folderTree li[data-id="${folderId}"]`);
+
+  if (!li) {
+    console.warn("[FILTER] Dossier actif introuvable");
+    return;
+  }
+
+  // Recharge sans casser la sélection
+  await loadFolderFilesOnClick(li, null);
 }
 
-function getPreviewType(fileName){
-  return /\.pdf$/i.test(fileName) ? "pdf" : "image";
+
+async function applyFilter(){
+  filterStartDate = document.getElementById('startDate').value;
+  filterEndDate   = document.getElementById('endDate').value;
+
+  await refreshCurrentFolder();
 }
+
+async function clearFilter(){
+  filterStartDate = '';
+  filterEndDate   = '';
+
+  fpStart?.clear();
+  fpEnd?.clear();
+
+  const ys = document.getElementById("yearSelect");
+  if (ys) ys.value = "";
+
+  await refreshCurrentFolder();
+}
+
 
 
   
@@ -2372,6 +2387,8 @@ function markFolderWithFlame(li) {
 /* ----------- Datepickers enrichis (Flatpickr) ----------- */
 let fpStart = null;
 let fpEnd = null;
+  let suppressAutoFilter = false;
+
 
 function initDatePickers() {
   const commonOpts = {
@@ -2394,11 +2411,28 @@ function initDatePickers() {
       recolorHotDays(instance);
     },
 
-    onChange: function(selectedDates, dateStr, instance) {
-      const parent = instance.input.closest(".date-field");
-      if (dateStr) parent.classList.add("has-date");
-      else parent.classList.remove("has-date");
-    },
+onChange: async function(selectedDates, dateStr, instance) {
+
+  const parent = instance.input.closest(".date-field");
+
+  if (dateStr) {
+    parent.classList.add("has-date");
+  } else {
+    parent.classList.remove("has-date");
+  }
+
+  // Applique directement le filtre
+  filterStartDate = document.getElementById("startDate").value;
+  filterEndDate   = document.getElementById("endDate").value;
+
+  await refreshCurrentFolder();
+
+  // Reset select année
+  const ys = document.getElementById("yearSelect");
+  if (ys) ys.value = "";
+},
+
+
 
 onDayCreate: function(dObj, dStr, fp, dayElem) {
   const yyyymmdd = dayElem.dateObj.getFullYear().toString() +
@@ -2787,8 +2821,9 @@ window.onload=()=>{
   // bouton "Télécharger le dossier" caché par défaut tant qu'aucun contenu
   document.getElementById("downloadFolderBtn").style.display="none";
 
-  loadRootFolders();
-  initDatePickers();
+loadRootFolders();
+initDatePickers();
+initYearSelect();
 const last = localStorage.getItem("lastFolderId");
 if (last) {
   // attendre un peu que l'arborescence soit rendue
@@ -2840,6 +2875,10 @@ function clearBrowserCache() {
 
 </body>
 </html>
+
+
+
+
 
 
 
