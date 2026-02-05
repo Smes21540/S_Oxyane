@@ -226,12 +226,60 @@ tbody tr:hover .action-btn{opacity:1;visibility:visible;}
 }
 
 /* Modale images */
-.modal{display:none;position:fixed;z-index:1300;padding-top:50px;left:0;top:0;width:100%;height:100%;background-color:var(--overlay);text-align:center;}
-.modal .close{position:absolute;top:15px;right:25px;color:#fff;font-size:30px;cursor:pointer;}
-.modal iframe{width:90%;height:80vh;border:none;border-radius:10px;background:#000;}
+.modal{
+  display:none;                 /* ✅ fermée par défaut */
+  position:fixed;
+  z-index:1300;
+  inset:0;                      /* ✅ remplace left/top/width/height */
+  background-color:var(--overlay);
+
+  /* ✅ centrage via flex */
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+
+  padding:20px;
+  box-sizing:border-box;
+}
+
+.modal .close{
+  position:absolute;
+  top:15px;
+  right:25px;
+  color:#fff;
+  font-size:30px;
+  cursor:pointer;
+}
+
+.modal iframe{
+  width:min(90vw, 1200px);
+  height:80vh;
+  border:none;
+  border-radius:10px;
+  background:#000;
+}
+
+#modalVideo{
+  width:min(90vw, 1200px);
+  height:80vh;
+  border:none;
+  border-radius:10px;
+  background:#000;
+}
+
+#modalImg{
+  display:block;
+  max-width:min(90vw, 1200px);
+  max-height:80vh;
+  border-radius:10px;
+  background:#000;
+  object-fit:contain;
+}
+
 .modal-actions{margin-top:15px;display:flex;justify-content:center;gap:10px;}
 .modal-actions button{background:var(--accent);color:#fff;border:none;padding:8px 16px;border-radius:5px;cursor:pointer;font-weight:bold;}
 .modal-actions button:hover{background:var(--accent-darker);}
+
 
 /* Overlay ZIP */
 #zipOverlay{
@@ -633,12 +681,24 @@ body[data-theme="orange"] #smes-footer-bg {
 <div id="imageModal" class="modal" role="dialog" aria-modal="true">
   <span class="close" onclick="closeModal()" aria-label="Fermer">&times;</span>
   <!-- tabindex=-1 pour éviter que l'iframe vole le focus / bloque les flèches -->
-  <iframe id="modalFrame" tabindex="-1"></iframe>
-  <div class="modal-actions">
-    <button id="prevBtn">&larr; Précédent</button>
-    <button id="nextBtn">Suivant &rarr;</button>
-    <button id="downloadBtn">Télécharger</button>
-  </div>
+<iframe id="modalFrame" tabindex="-1"></iframe>
+
+<video id="modalVideo"
+       controls
+       style="display:none; width:90%; height:80vh; border:none; border-radius:10px; background:#000;">
+</video>
+
+<img id="modalImg"
+     style="display:none; max-width:90%; max-height:80vh; border-radius:10px; background:#000;"
+     alt="Aperçu" />
+
+
+<div class="modal-actions">
+  <button id="prevBtn">&larr; Précédent</button>
+  <button id="nextBtn">Suivant &rarr;</button>
+  <button id="downloadBtn">Télécharger</button>
+</div>
+
 </div>
 
 <!-- Overlay ZIP -->
@@ -1153,13 +1213,11 @@ console.log("[Folder] Chemin complet enregistré :", fullPath);
 
   // Charger fichiers CSV/JPG classiques du dossier
   const files = await fetchFolderContents(li.dataset.id);
-const filtered = files.filter(f => 
-  f.name.toLowerCase().endsWith('.csv') || 
-  f.name.toLowerCase().endsWith('.jpg') || 
-  f.name.toLowerCase().endsWith('.jpeg') ||
-  f.name.toLowerCase().endsWith('.json') ||
-  f.name.toLowerCase().endsWith('.pdf')
+const filtered = files.filter(f =>
+  /\.(csv|jpg|jpeg|png|gif|webp|json|pdf|mp4|webm|mov|m4v|avi|ppsx|pptx)$/i.test(f.name)
 );
+
+
 
 
 
@@ -1222,7 +1280,8 @@ document.querySelectorAll('#csvTable tbody tr').forEach(tr => {
   }
 }
 
-previewFiles = filtered.filter(f => /\.(jpg|jpeg|pdf)$/i.test(f.name));
+previewFiles = filtered.filter(f => /\.(jpg|jpeg|pdf|mp4|gif|webm|mov|m4v)$/i.test(f.name));
+
 displayFiles(filtered, nameSpan ? nameSpan.textContent : '');
 
 
@@ -1545,7 +1604,9 @@ const tdFolder=document.createElement('td'); tdFolder.textContent=folderName;
     const tdAction=document.createElement('td'); tdAction.className='action-cell';
     let html='';
 if(f.name.toLowerCase().endsWith('.csv')){
-  html+=`<a href="https://drive.google.com/uc?export=download&id=${f.id}" target="_blank"><button class="action-btn">Télécharger</button></a>`;
+  html+=`<a href="https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&download=1&site=Smes_Acces" target="_blank">
+          <button class="action-btn">Télécharger</button>
+        </a>`;
   html+=`<button class="action-btn" onclick="openViewer('viewer.html','${f.id}','${f.name}')">Tableau</button>`;
 
   // 👇 bouton Courbes seulement si on n'est PAS dans Historique
@@ -1558,6 +1619,7 @@ if(f.name.toLowerCase().endsWith('.csv')){
     html+=`<button class="action-btn" onclick="openViewer('index03.html','${f.id}','${f.name}')">Sondes</button>`;
   }
 }
+
 
 
 
@@ -1596,21 +1658,56 @@ if (
 
 
 
-    if(/\.(jpg|jpeg)$/i.test(f.name)){
-      html+=`<img src="https://drive.google.com/thumbnail?id=${f.id}" onclick="openModal('${f.id}')" alt="aperçu">`;
-      html+=`<a href="https://drive.google.com/uc?export=download&id=${f.id}" target="_blank"><button class="action-btn">Télécharger</button></a>`;
-    }
+if(/\.(jpg|jpeg|png|gif|webp)$/i.test(f.name)){
+  html+=`<img src="https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&site=Smes_Acces"
+    onclick="openModal('${f.id}')"
+    alt="aperçu">`;
+
+  html+=`<a href="https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&download=1&site=Smes_Acces" target="_blank">
+          <button class="action-btn">Télécharger</button>
+        </a>`;
+}
+
+
+/* ✅ VIDEO (MP4/WEBM/MOV/M4V) */
+if(/\.(mp4|webm|mov|m4v)$/i.test(f.name)){
+  html += `
+    <button class="action-btn" onclick="openModal('${f.id}')">Ouvrir</button>
+    <a href="https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&download=1&site=Smes_Acces" target="_blank">
+      <button class="action-btn">Télécharger</button>
+    </a>
+  `;
+}
+
+
 
 // === PDF ===
 if (f.name.toLowerCase().endsWith(".pdf")) {
   html += `
-    <a href="https://drive.google.com/uc?export=download&id=${f.id}" target="_blank">
+    <a href="https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&download=1&site=Smes_Acces" target="_blank">
       <button class="action-btn">Télécharger</button>
     </a>
     <button class="action-btn" onclick="openModal('${f.id}')">Ouvrir</button>
 
   `;
 }
+
+// === PowerPoint (ppsx/pptx) ===
+if (/\.(ppsx|pptx)$/i.test(f.name)) {
+  const baseUrl = `https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`;
+
+  html += `
+    <a href="${baseUrl}&download=1" target="_blank">
+      <button class="action-btn">Télécharger</button>
+    </a>
+    <a href="${baseUrl}" target="_blank">
+      <button class="action-btn">Ouvrir</button>
+    </a>
+  `;
+}
+
+
+  
 
 
     tdAction.innerHTML=html;
@@ -1758,51 +1855,142 @@ function getPreviewType(fileName){
 
 
   
-/* ----------- Modale images + navigation clavier ----------- */
-function openModal(id) {
-  const modal = document.getElementById('imageModal');
-  modal.style.display = 'block';
-  const frame = document.getElementById('modalFrame');
+/* ----------- Modale images / pdf / video + navigation ----------- */
 
+function openModal(id) {
   currentPreviewIndex = previewFiles.findIndex(f => f.id === id);
   const file = previewFiles[currentPreviewIndex];
-  if (!file) return;
+  if (!file) return; // ✅ n'ouvre pas une modale vide
 
-  const type = getPreviewType(file.name);
+  const modal = document.getElementById('imageModal');
+  modal.style.display = 'flex';
 
-  frame.src = (type === "pdf")
-    ? `https://drive.google.com/file/d/${id}/preview#toolbar=0`
-    : `https://drive.google.com/file/d/${id}/preview`;
+  const frame = document.getElementById('modalFrame');
+  const video = document.getElementById('modalVideo');
+  const img   = document.getElementById('modalImg');
 
-  document.getElementById('downloadBtn').onclick = () =>
-    window.open(`https://drive.google.com/uc?export=download&id=${id}`, '_blank');
+
+  const url =
+    `https://smes21540.netlify.app/.netlify/functions/drive` +
+    `?id=${id}&name=${encodeURIComponent(file.name)}&site=Smes_Acces`;
+
+  const isVideo = /\.(mp4|webm|mov|m4v)$/i.test(file.name);
+  const isPdf   = /\.pdf$/i.test(file.name);
+  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
+
+  // 🔄 Reset complet
+  frame.style.display = "none";
+  frame.src = "";
+
+  video.pause();
+  video.style.display = "none";
+  video.src = "";
+
+  img.style.display = "none";
+  img.src = "";
+
+  // 🎯 Affichage selon type
+  if (isVideo) {
+
+    video.style.display = "block";
+    video.src = url;
+    video.load();
+
+  } else if (isPdf) {
+
+    frame.style.display = "block";
+    frame.src = url;
+
+  } else if (isImage) {
+
+    img.style.display = "block";
+    img.src = url;
+
+  } else {
+
+    // fallback
+    frame.style.display = "block";
+    frame.src = url;
+  }
+
+  // ⬇️ Bouton téléchargement
+  document.getElementById('downloadBtn').onclick = () => {
+    window.open(
+      `https://smes21540.netlify.app/.netlify/functions/drive` +
+      `?id=${id}&name=${encodeURIComponent(file.name)}` +
+      `&download=1&site=Smes_Acces`,
+      '_blank'
+    );
+  };
 }
 
 
-function closeModal(){document.getElementById('imageModal').style.display='none';}
+/* ----------- Fermeture modale ----------- */
+
+function closeModal(){
+
+  const modal = document.getElementById('imageModal');
+  modal.style.display = 'none';
+
+  const frame = document.getElementById('modalFrame');
+  const video = document.getElementById('modalVideo');
+  const img   = document.getElementById('modalImg');
+
+  // stop + nettoyage
+  frame.src = "";
+
+  video.pause();
+  video.src = "";
+  video.style.display = "none";
+
+  img.src = "";
+  img.style.display = "none";
+}
+
+
+/* ----------- Boutons navigation ----------- */
 
 document.getElementById('prevBtn').onclick = () => {
-  if (currentPreviewIndex > 0) openModal(previewFiles[--currentPreviewIndex].id);
+  if (currentPreviewIndex > 0) {
+    openModal(previewFiles[--currentPreviewIndex].id);
+  }
 };
+
 document.getElementById('nextBtn').onclick = () => {
-  if (currentPreviewIndex < previewFiles.length - 1) openModal(previewFiles[++currentPreviewIndex].id);
+  if (currentPreviewIndex < previewFiles.length - 1) {
+    openModal(previewFiles[++currentPreviewIndex].id);
+  }
 };
 
-window.addEventListener('click',e=>{if(e.target===document.getElementById('imageModal')) closeModal();});
 
-// Navigation clavier quand la modale est ouverte
-window.addEventListener('keydown', e=>{
-  const modal=document.getElementById('imageModal');
-  if(modal.style.display==='block'){
-    if(e.key==='ArrowLeft' && currentPreviewIndex>0){
-      openModal(previewFiles[--currentPreviewIndex].id);
-    }
-    if(e.key==='ArrowRight' && currentPreviewIndex<previewFiles.length-1){
-      openModal(previewFiles[++currentPreviewIndex].id);
-    }
-    if(e.key==='Escape'){ closeModal(); }
+/* ----------- Click hors contenu = fermer ----------- */
+
+window.addEventListener('click', e => {
+  const modal = document.getElementById('imageModal');
+  if (e.target === modal) closeModal();
+});
+
+
+/* ----------- Navigation clavier ----------- */
+
+window.addEventListener('keydown', e => {
+
+  const modal = document.getElementById('imageModal');
+  if (modal.style.display !== 'flex') return;
+
+  if (e.key === 'ArrowLeft' && currentPreviewIndex > 0) {
+    openModal(previewFiles[--currentPreviewIndex].id);
+  }
+
+  if (e.key === 'ArrowRight' && currentPreviewIndex < previewFiles.length - 1) {
+    openModal(previewFiles[++currentPreviewIndex].id);
+  }
+
+  if (e.key === 'Escape') {
+    closeModal();
   }
 });
+
 
 
 /* ----------- ZIP overlay + progression + annulation ----------- */
@@ -2652,6 +2840,14 @@ function clearBrowserCache() {
 
 </body>
 </html>
+
+
+
+
+
+
+
+
 
 
 
