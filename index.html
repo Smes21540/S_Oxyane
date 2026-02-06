@@ -586,6 +586,67 @@ body[data-theme="orange"] #smes-footer-bg {
 }
 
 
+/* === Campagnes (boutons auto 2024/2025...) === */
+.campaign-box{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  padding:6px 10px;
+  border:2px dashed var(--accent-muted);
+  border-radius:10px;
+  background: rgba(255,255,255,0.65);
+}
+
+.campaign-title{
+  font-size:12px;
+  font-weight:700;
+  color: var(--accent-darker);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.campaign-buttons{
+  display:flex;
+  flex-direction:column; /* ✅ un en dessous de l'autre */
+  gap:6px;
+}
+
+.campaign-btn{
+  background: linear-gradient(180deg, var(--accent-muted), #ffffff);
+  border: 2px solid var(--accent);
+  color: var(--accent-darker);
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+  transition: transform .15s ease, filter .15s ease;
+}
+
+.campaign-btn:hover{
+  transform: scale(1.02);
+  filter: brightness(1.02);
+}
+
+/* ✅ Campagne sélectionnée : effet beaucoup plus visible */
+.campaign-btn.active{
+  background: linear-gradient(180deg, var(--accent), var(--accent-darker));
+  border: 3px solid var(--danger);
+  outline: 1px solid #000;      /* ✅ trait noir 1px autour */
+  outline-offset: 0;            /* collé au bouton */
+  color: var(--accent-contrast);
+
+  box-shadow:
+    0 0 0 3px rgba(255,255,255,0.6),
+    0 8px 16px rgba(0,0,0,0.25),
+    0 0 12px rgba(255,112,67,0.6);
+
+  transform: scale(1.03);
+  filter: saturate(1.2) contrast(1.1);
+}
+
+
 
 
 
@@ -635,11 +696,18 @@ body[data-theme="orange"] #smes-footer-bg {
   à
   <div class="date-field"><span id="iconEnd">📅</span><input type="date" id="endDate"></div>
 
+  <!-- ✅ Boutons campagne auto (2024/2025...) -->
+  <div id="campaignBox" class="campaign-box" style="display:none;">
+    <div class="campaign-title">Campagnes de séchage :</div>
+    <div id="campaignButtons" class="campaign-buttons"></div>
+  </div>
+
   <button onclick="clearFilter()">Tout afficher</button>
   <button id="downloadFolderBtn">Télécharger le dossier</button>
   <button id="exportCsvBtn" style="display:none;" title="Voir les barres graphiques de consommation par jour">Graphique</button>
   <button id="exportExcelGazBtn" style="display:none;" title="Exporter les données en Excel (kWh, m³, durée, tonnage)">Export Excel</button>
 </div>
+
 
 
   <div id="tableWrapper">
@@ -740,6 +808,151 @@ let filterStartDate="", filterEndDate="";
 let themeMenuTimer;
 let cancelScan = false; // 🛑 permet d’arrêter le scan si on clique ailleurs
 
+
+
+/* ===========================
+   === Campagnes (2024/2025...)
+   =========================== */
+let activeCampaignKey = ""; // ex: "2025"
+let campaignBySite = {};    // cache: { siteId: { "2025": {start:"YYYY-MM-DD", end:"YYYY-MM-DD"} } }
+
+function parseCampaignDateToISO(s){
+  // accepte "09/09/2025" (dd/mm/yyyy)
+  const txt = (s || "").trim();
+  const m = txt.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if(!m) return "";
+  const dd = m[1], mm = m[2], yyyy = m[3];
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+async function loadCampaignFilesForSite(siteId){
+  if (!siteId) return {};
+  if (campaignBySite[siteId]) return campaignBySite[siteId];
+
+  const files = await fetchFolderContents(siteId);
+
+  // accepte tout fichier qui CONTIENT une année et finit par .json/.csv
+  // ex: "2024.json", "🌽2025.json", "2024 Roulin 1🌻.json"
+  const campFiles = files.filter(f =>
+    /\d{4}.*\.(json|csv)$/i.test(f.name)
+  );
+
+
+  if (!campFiles.length){
+    campaignBySite[siteId] = {};
+    return {};
+  }
+
+  const out = {}; // { "2025": {start, end} }
+
+  await Promise.all(campFiles.map(async (f) => {
+    const key = (f.name || "").replace(/\.(json|csv)$/i, "").trim();
+
+    // année = sert au tri (on prend la 1ère année trouvée dans le nom)
+    const mYear = (f.name || "").match(/(\d{4})/);
+    const year = mYear ? mYear[1] : "0000";
+
+
+    try{
+      const res = await fetch(
+        `https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`
+      );
+      if(!res.ok) return;
+
+      const text = await res.text();
+
+      // on lit 2 lignes (peu importe json/csv: tu as dit "2 lignes")
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if(lines.length < 2) return;
+
+      const startISO = parseCampaignDateToISO(lines[0]);
+      const endISO   = parseCampaignDateToISO(lines[1]);
+      if(!startISO || !endISO) return;
+
+      out[key] = { start: startISO, end: endISO, fileName: f.name };
+
+    } catch(e){
+      console.warn("[CAMPAGNE] Erreur lecture", f.name, e);
+    }
+  }));
+
+  campaignBySite[siteId] = out;
+  return out;
+}
+
+function renderCampaignButtons(campaigns){
+  const box = document.getElementById("campaignBox");
+  const wrap = document.getElementById("campaignButtons");
+  if(!box || !wrap) return;
+
+  wrap.innerHTML = "";
+    const keys = Object.keys(campaigns || {}).sort((a,b)=>{
+    const ya = campaigns[a]?.year || "0000";
+    const yb = campaigns[b]?.year || "0000";
+    if (ya !== yb) return yb.localeCompare(ya); // année desc
+    return a.localeCompare(b, 'fr', { sensitivity:'base' }); // puis nom
+  });
+
+
+  if(!keys.length){
+    box.style.display = "none";
+    activeCampaignKey = "";
+    return;
+  }
+
+  box.style.display = "flex";
+
+  keys.forEach(key => {
+    const c = campaigns[key];
+    const btn = document.createElement("button");
+    btn.className = "campaign-btn" + (activeCampaignKey === key ? " active" : "");
+    // Nom brut depuis le fichier (sans extension)
+let label = (c.fileName || key)
+  .replace(/\.(json|csv)$/i, "")
+  .trim();
+
+btn.textContent =
+  `Campagne ${label} (${c.start.split("-").reverse().join("/")} → ${c.end.split("-").reverse().join("/")})`;
+
+
+    btn.onclick = async () => {
+      const isSame = (activeCampaignKey === key);
+      activeCampaignKey = isSame ? "" : key;
+
+      document.querySelectorAll(".campaign-btn").forEach(b => b.classList.remove("active"));
+      if(!isSame) btn.classList.add("active");
+
+      if (isSame) return; // si on re-clique la même, on juste désactive visuellement
+
+      // ⚠️ ton flatpickr onChange déclenche refreshCurrentFolder.
+      // On désactive temporairement pour éviter 2 refreshs.
+      suppressAutoFilter = true;
+      try{
+        fpStart?.setDate(c.start, true);
+        fpEnd?.setDate(c.end, true);
+      } finally {
+        suppressAutoFilter = false;
+      }
+
+      // ✅ on pousse les filtres + refresh
+      filterStartDate = c.start;
+      filterEndDate   = c.end;
+
+      await refreshCurrentFolder();
+    };
+
+    wrap.appendChild(btn);
+  });
+}
+
+async function refreshCampaignUIForSite(siteId){
+  const campaigns = await loadCampaignFilesForSite(siteId);
+  renderCampaignButtons(campaigns);
+}
+
+
+
+  
 async function getTonnageForDate(siteRoot, dateStr) {
 
     console.log("=== TONNAGE DEBUG ===");
@@ -893,6 +1106,16 @@ const spinner=document.getElementById('spinner');
 function showSpinner(){spinner.style.display='block';}
 function hideSpinner(){spinner.style.display='none';}
 
+function getSiteRootLi(li){
+  let cur = li;
+  while (cur && cur.parentElement && cur.parentElement.closest("li")) {
+    cur = cur.parentElement.closest("li");
+  }
+  return cur; // dossier racine du site
+}
+
+
+
 function updateNetworkStatus(){
   document.getElementById("netAlert").style.display = navigator.onLine ? "none" : "block";
 }
@@ -967,7 +1190,12 @@ async function loadRootFolders(){
 // 🔒 Cacher les filtres quand on revient à la racine
 document.querySelector(".controls").style.display = "none";
 
+const cb = document.getElementById("campaignBox");
+if (cb) cb.style.display = "none";
+activeCampaignKey = "";
 
+
+  
   files
   .filter(f => f.mimeType === 'application/vnd.google-apps.folder')
   .sort((a,b) => a.name.localeCompare(b.name, 'fr', { sensitivity:'base' }))
@@ -1217,19 +1445,25 @@ const filtered = files.filter(f =>
 
 
 
-// 🧭 Détermination du site courant
-const siteLi = li.parentElement.closest("li");
-let siteId = siteLi?.dataset.id || null;
+// 🧭 Détermination du site courant (toujours la racine du site)
+const siteRootLi = getSiteRootLi(li);
+const siteId = siteRootLi?.dataset.id || null;
+
 
 if (siteId && siteId !== currentSiteId) {
   clearSiteHotDays();
   currentSiteId = siteId;
-  console.log(`[SITE] Changement de site → ${siteLi.querySelector(".folder-name")?.textContent}`);
+  console.log(`[SITE] Changement de site → ${siteRootLi?.querySelector(".folder-name")?.textContent}`);
 
+
+  // ✅ Campagnes (2024/2025...) depuis le dossier parent du site
+  await refreshCampaignUIForSite(siteId);
+  
 // 🔥 Lancer le scan en arrière-plan sans bloquer l'affichage
 scanSiteHotDays(siteId).then(map => {
   hotDaysMap = map;
-  console.log(`[CACHE] 🔥 ${Object.keys(hotDaysMap).length} jours chauds détectés et chargés pour ${siteLi.querySelector(".folder-name")?.textContent}`);
+  console.log(`[CACHE] 🔥 ${Object.keys(hotDaysMap).length} jours chauds détectés et chargés pour ${siteRootLi?.querySelector(".folder-name")?.textContent}`);
+
 
 // 🪄 Rafraîchir seulement les flammes dans le tableau actuel sans supprimer les notes 📝
 document.querySelectorAll('#csvTable tbody tr').forEach(tr => {
@@ -1861,11 +2095,16 @@ async function clearFilter(){
   fpStart?.clear();
   fpEnd?.clear();
 
+  // ✅ désactive campagne
+  activeCampaignKey = "";
+  document.querySelectorAll(".campaign-btn").forEach(b => b.classList.remove("active"));
+
   const ys = document.getElementById("yearSelect");
   if (ys) ys.value = "";
 
   await refreshCurrentFolder();
 }
+
 
 
 
@@ -2415,22 +2654,21 @@ onChange: async function(selectedDates, dateStr, instance) {
 
   const parent = instance.input.closest(".date-field");
 
-  if (dateStr) {
-    parent.classList.add("has-date");
-  } else {
-    parent.classList.remove("has-date");
-  }
+  if (dateStr) parent.classList.add("has-date");
+  else parent.classList.remove("has-date");
 
-  // Applique directement le filtre
+  // ✅ si on change les dates via bouton campagne → on ne déclenche pas ici
+  if (suppressAutoFilter) return;
+
   filterStartDate = document.getElementById("startDate").value;
   filterEndDate   = document.getElementById("endDate").value;
 
   await refreshCurrentFolder();
 
-  // Reset select année
   const ys = document.getElementById("yearSelect");
   if (ys) ys.value = "";
 },
+
 
 
 
@@ -2810,6 +3048,18 @@ async function runWithConcurrency(tasks, limit, worker) {
   await Promise.all([...executing]);
 }
 
+
+
+// ✅ évite le crash si #yearSelect n'existe plus
+function initYearSelect(){
+  const ys = document.getElementById("yearSelect");
+  if(!ys) return;
+  // Si tu réintroduis un select un jour, tu mettras ici son initialisation.
+}
+
+const ys = document.getElementById("yearSelect");
+if (ys) ys.value = "";
+
   
 
 /* ----------- Init ----------- */
@@ -2839,6 +3089,8 @@ if (last) {
 
 };
 
+
+  
 
 </script>
 
@@ -2875,6 +3127,12 @@ function clearBrowserCache() {
 
 </body>
 </html>
+
+
+
+
+
+
 
 
 
