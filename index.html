@@ -87,7 +87,14 @@ body{
 
 
 /* Main */
-#main{flex:1;padding:10px 20px;display:flex;flex-direction:column;overflow:hidden;}
+#main{
+  flex:1;
+  padding:10px 20px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  position:relative; /* ✅ nécessaire pour le centrage */
+}
 .header{display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:15px;}
 .header .logo{height:60px;width:auto;}
 #fileNameContainer{position:absolute;right:0;top:0;text-align:right;}
@@ -220,6 +227,27 @@ tbody tr:hover .action-btn{opacity:1;visibility:visible;}
   font-size:22px;animation:bounceLeft 1s infinite;}
 
 /* Spinner */
+
+#scanIndicator {
+  display: none;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 70px;
+
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: bold;
+
+  background: var(--accent-muted);
+  color: var(--accent-darker);
+
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 2000;
+}
+
+  
 #spinner{
   display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   width:40px;height:40px;border:6px solid #f3f3f3;border-top:6px solid var(--accent);border-radius:50%;
@@ -590,12 +618,25 @@ body[data-theme="orange"] #smes-footer-bg {
 .campaign-box{
   display:flex;
   flex-direction:column;
-  gap:6px;
-  padding:6px 10px;
-  border:2px dashed var(--accent-muted);
-  border-radius:10px;
-  background: rgba(255,255,255,0.65);
+  gap:8px;
+  padding:10px 12px;
+
+  /* 🔁 Bordure pleine, propre */
+  border:2px solid var(--accent);
+
+  border-radius:12px;
+
+  /* Fond plus net */
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.95),
+    rgba(255,245,240,0.9)
+  );
+
+  /* Légère profondeur */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
+
 
 .campaign-title{
   font-size:12px;
@@ -648,10 +689,110 @@ body[data-theme="orange"] #smes-footer-bg {
 
 
 
+/* === Tuiles “grosses icônes” (centrées dans la page) === */
+.site-tiles{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap:14px;
+
+  /* ✅ centrage horizontal + vertical */
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+
+  /* ✅ largeur propre + scroll si besoin */
+  width:min(900px, calc(100% - 20px));
+  max-height:calc(100% - 20px);
+  overflow:auto;
+
+  padding:8px;
+  margin:0;
+}
+
+.site-tiles{
+  z-index: 1200;
+  pointer-events: auto;
+}
+
+  
+
+.site-tile{
+  background: var(--panel);
+  border: 2px solid var(--accent-muted);
+  border-radius: 14px;
+  box-shadow: 0 4px 12px var(--shadow);
+  padding: 14px 12px;
+  cursor: pointer;
+  transition: transform .15s ease, filter .15s ease, border-color .15s ease;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height: 120px;
+  user-select:none;
+}
+
+.site-tile:hover{
+  transform: scale(1.02);
+  filter: brightness(1.02);
+  border-color: var(--accent);
+}
+
+.site-tile .icon{
+  font-size: 44px;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.site-tile .label{
+  font-weight: 800;
+  color: var(--accent-darker);
+  text-align:center;
+  word-break: break-word;
+}
 
 
+/* Accès direct aux deux calculateurs séchoir */
+.sechoir-calcul-group{
+  position:absolute;
+  left:0;
+  top:8px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  z-index:5;
+}
 
+.sechoir-calcul-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-width:145px;
+  padding:9px 14px;
+  border-radius:10px;
+  color:var(--accent-contrast);
+  text-decoration:none;
+  font-weight:800;
+  font-size:13px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.18);
+  transition:transform .2s ease,filter .2s ease;
+  white-space:nowrap;
+}
 
+.sechoir-calcul-btn.horaire{
+  background:linear-gradient(180deg,var(--accent),var(--accent-darker));
+}
+
+.sechoir-calcul-btn.bilan{
+  background:linear-gradient(180deg,#42a5f5,#1565c0);
+}
+
+.sechoir-calcul-btn:hover{
+  transform:scale(1.04);
+  filter:brightness(1.05);
+}
   
   
 
@@ -683,7 +824,27 @@ body[data-theme="orange"] #smes-footer-bg {
 <!-- Main -->
 <div id="main">
   <div class="header">
+<div class="sechoir-calcul-group">
+
+  <a href="calcul_horaire.html"
+     class="sechoir-calcul-btn horaire"
+     target="_blank"
+     rel="noopener noreferrer"
+     title="Ouvrir le calcul horaire dans un nouvel onglet">
+    ⏱️ Calcul horaire
+  </a>
+
+  <a href="bilan_campagne.html"
+     class="sechoir-calcul-btn bilan"
+     target="_blank"
+     rel="noopener noreferrer"
+     title="Ouvrir le bilan campagne dans un nouvel onglet">
+    📊 Bilan campagne
+  </a>
+
+</div>
     <img src="img/logo.png" class="logo" id="mainLogo" alt="Logo"/>
+    <div id="scanIndicator">🔄 Analyse en cours...</div>
     <div id="fileNameContainer">
       <div id="fileName"></div>
       <div id="lineCount"></div>
@@ -698,7 +859,7 @@ body[data-theme="orange"] #smes-footer-bg {
 
   <!-- ✅ Boutons campagne auto (2024/2025...) -->
   <div id="campaignBox" class="campaign-box" style="display:none;">
-    <div class="campaign-title">Campagnes de séchage :</div>
+    <div class="campaign-title">Vous Pouvez selectionner une période précise :</div>
     <div id="campaignButtons" class="campaign-buttons"></div>
   </div>
 
@@ -708,6 +869,8 @@ body[data-theme="orange"] #smes-footer-bg {
   <button id="exportExcelGazBtn" style="display:none;" title="Exporter les données en Excel (kWh, m³, durée, tonnage)">Export Excel</button>
 </div>
 
+<!-- ✅ Tuiles dossiers (page principale) -->
+<div id="siteTiles" class="site-tiles" style="display:none;"></div>
 
 
   <div id="tableWrapper">
@@ -789,6 +952,7 @@ body[data-theme="orange"] #smes-footer-bg {
 <script>
 /* ----------- Config Drive ----------- */
 const ROOT_FOLDER_ID="18QkQPyCZxTCAaoz_qd1wAelmQbSE4ex8";
+const ROOT_MODE = "site"; // "site" ou "coop"  
 // ✅ Active/désactive les calculs de consommation gaz
 const ENABLE_GAZ_CALC = true;  // ← passe à false pour désactiver
 
@@ -800,15 +964,100 @@ let storedNotes = {};
 
 
 /* ----------- Config personnalisée ----------- */
+
+/* --- Descriptions dossiers (tooltip simple) --- */
+const FOLDER_DESCRIPTIONS = [
+  { key: "traça_temp", desc: "Traçabilité valeurs sondes, consignes, réglages, consommation… Courbes, plan de sondes, etc." },
+  { key: "traca_temp", desc: "Traçabilité valeurs sondes, consignes, réglages, consommation… Courbes, plan de sondes, etc." },
+  { key: "historique", desc: "Historique de fonctionnement, réglages, événements journaliers…" },
+  { key: "echantillonnage", desc: "Feuille de prises d'échantillon journalière (Humidité, réglages, etc.)." },
+  { key: "consommation gaz", desc: "Consommation gaz journalière, conversion kWh, temps de séchage, cumul tonnage…" },
+];
+
+function getFolderDescription(name){
+  const n = (name || "").toLowerCase();
+  const hit = FOLDER_DESCRIPTIONS.find(x => n.includes(x.key));
+  return hit ? hit.desc : "";
+}
+
+function applyFolderTooltip(el, folderName){
+  if (!el) return;
+
+  const desc = getFolderDescription(folderName);
+  if (desc){
+    el.title = desc; // tooltip natif
+  }
+}
+
+
+/* --- Icônes dossiers selon type --- */
+function getFolderIcon(name){
+  const n = (name || "").toLowerCase();
+
+  if (n.includes("gaz")) return "⛽";
+  if (n.includes("echantillonnage")) return "📖";
+  if (n.includes("capture")) return "🖼️";
+  if (n.includes("rapport")) return "📄";
+  if (n.includes("historique")) return "🗂️";
+  if (n.includes("traça_temp") || n.includes("traca_temp")) return "📈";
+
+  return "📒";
+}
+
+
+
+  
 const FLAME_THRESHOLD = 40.0;   // seuil déclencheur de la flamme 🔥
 
 /* ----------- État ----------- */
 let previewFiles = [], currentPreviewIndex = 0;
+let historiqueDurations = {};
+
 let filterStartDate="", filterEndDate="";
+  let activeScans = 0;
+
+function startScan() {
+  activeScans++;
+  document.getElementById("scanIndicator").style.display = "block";
+}
+
+function endScan() {
+  activeScans--;
+  if (activeScans <= 0) {
+    activeScans = 0;
+    document.getElementById("scanIndicator").style.display = "none";
+  }
+}
+
 let themeMenuTimer;
-let cancelScan = false; // 🛑 permet d’arrêter le scan si on clique ailleurs
+let cancelScan = false;
+
+let isUserNavigating = false;   // 🔒 verrou navigation utilisateur
 
 
+function isDriveFolderOrShortcutFolder(f){
+  return (
+    f?.mimeType === "application/vnd.google-apps.folder" ||
+    (f?.mimeType === "application/vnd.google-apps.shortcut" &&
+     f?.shortcutDetails?.targetMimeType === "application/vnd.google-apps.folder")
+  );
+}
+
+function getDriveFolderId(f){
+  if (f?.mimeType === "application/vnd.google-apps.shortcut" && f?.shortcutDetails?.targetId) {
+    return f.shortcutDetails.targetId; // ✅ ID du dossier cible
+  }
+  return f?.id; // ✅ dossier normal
+}
+
+function getDriveFileId(f){
+  if (f?.mimeType === "application/vnd.google-apps.shortcut" && f?.shortcutDetails?.targetId) {
+    return f.shortcutDetails.targetId; // ✅ fichier cible
+  }
+  return f?.id; // ✅ fichier normal
+}
+
+  
 
 /* ===========================
    === Campagnes (2024/2025...)
@@ -854,9 +1103,11 @@ async function loadCampaignFilesForSite(siteId){
 
 
     try{
-      const res = await fetch(
-        `https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`
-      );
+const realId = getDriveFileId(f);
+const res = await fetch(
+  `https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`
+);
+
       if(!res.ok) return;
 
       const text = await res.text();
@@ -953,39 +1204,19 @@ async function refreshCampaignUIForSite(siteId){
 
 
   
-async function getTonnageForDate(siteRoot, dateStr) {
+async function getTonnageForDate(siteId, dateStr) {
 
-    console.log("=== TONNAGE DEBUG ===");
-    console.log("Site :", siteRoot);
-    console.log("Date :", dateStr);
-
-    try {
-        // On récupère le chemin complet actuel
-const path = (localStorage.getItem("lastFolderPath") || "").split("/");
-
-// Exemple : ["Valbonne","Consommation Gaz"]
-// On prend la racine du site : "Valbonne"
-const siteName = path[0];
-
-// On liste les dossiers au niveau du site
-const root = await fetchFolderContents(ROOT_FOLDER_ID);  // l’ID Drive de ton dossier principal
-
-// On trouve le dossier du site
-const siteFolder = root.find(f => f.name === siteName);
-
-if (!siteFolder) {
-    console.warn("❌ Impossible de trouver le dossier du site :", siteName);
-    return 0;
-}
-
-// Maintenant on scanne les sous-dossiers du site
-const folders = await fetchFolderContents(siteFolder.id);
+  try {
+    const folders = await fetchFolderContents(siteId);
 
 
-        const tracatemp = folders.find(f =>
-            f.mimeType === "application/vnd.google-apps.folder" &&
-            f.name.toLowerCase().includes("traça_temp")
-        );
+
+
+const tracatemp = folders.find(f =>
+  isDriveFolderOrShortcutFolder(f) &&
+  (f.name.toLowerCase().includes("traça_temp") || f.name.toLowerCase().includes("traca_temp"))
+);
+
 
         if (!tracatemp) {
             console.warn("❌ Dossier Traça_Temp introuvable !");
@@ -994,8 +1225,16 @@ const folders = await fetchFolderContents(siteFolder.id);
 
         console.log("✔ Dossier Traça_Temp trouvé :", tracatemp.name, tracatemp.id);
 
-        const files = await fetchFolderContents(tracatemp.id);
+        const files = await fetchFolderContents(getDriveFolderId(tracatemp));
 
+if (!files || files.length === 0) {
+  console.warn("⚠️ Traça_Temp vide → tonnage ignoré");
+  return 0;
+}
+
+
+
+      
         const csvName = `SA00094_${dateStr.replace(/-/g, "")}.csv`;
 
         console.log("Recherche du fichier :", csvName);
@@ -1010,7 +1249,9 @@ const folders = await fetchFolderContents(siteFolder.id);
         console.log("✔ Fichier trouvé :", file.name, file.id);
 
         // Téléchargement du CSV
-        const url = `https://smes21540.netlify.app/.netlify/functions/drive?id=${file.id}&name=${encodeURIComponent(file.name)}&site=Smes_Acces`;
+        const realId = getDriveFileId(file);
+const url = `https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(file.name)}&site=Smes_Acces`;
+
 
         console.log("Téléchargement depuis :", url);
 
@@ -1025,7 +1266,8 @@ const folders = await fetchFolderContents(siteFolder.id);
 
         console.log("✔ CSV téléchargé, longueur :", text.length);
 
-        const lines = text.trim().split(/\r?\n/);
+        const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+
 
         console.log("Nombre de lignes :", lines.length);
 
@@ -1061,7 +1303,11 @@ const folders = await fetchFolderContents(siteFolder.id);
 
         console.log("Header :", header);
 
-        const idx = header.indexOf("Cumul (tonnes)");
+const idx = header.findIndex(h =>
+  h.toLowerCase().includes("cumul") &&
+  h.toLowerCase().includes("tonne")
+);
+
 
         console.log("Index 'Cumul (tonnes)' :", idx);
 
@@ -1070,8 +1316,11 @@ const folders = await fetchFolderContents(siteFolder.id);
             return 0;
         }
 
-        const firstLine = parseCSV(lines[1]);
-        const lastLine  = parseCSV(lines[lines.length - 1]);
+if (lines.length < 2) return 0;
+
+const firstLine = parseCSV(lines[1]);
+const lastLine  = parseCSV(lines[lines.length - 1]);
+
 
         console.log("Première ligne tonnage brute :", firstLine[idx]);
         console.log("Dernière ligne tonnage brute :", lastLine[idx]);
@@ -1086,11 +1335,14 @@ const folders = await fetchFolderContents(siteFolder.id);
             return 0;
         }
 
-        const diff = last - first;
+if (last < first) {
+  console.warn("⚠️ Cumul réinitialisé, tonnage ignoré");
+  return 0;
+}
 
-        console.log("✔ Tonnage calculé =", diff);
+const diff = last - first;
+return diff;
 
-        return diff;
 
     } catch (e) {
         console.error("💥 Exception tonnage :", e);
@@ -1179,175 +1431,292 @@ async function fetchFolderContents(folderId){
   }
 }
 
-
-
-
-async function loadRootFolders(){
-  const files = await fetchFolderContents(ROOT_FOLDER_ID);
-  const rootUL = document.getElementById('folderTree');
-  rootUL.innerHTML = '';
-
-// 🔒 Cacher les filtres quand on revient à la racine
-document.querySelector(".controls").style.display = "none";
-
-const cb = document.getElementById("campaignBox");
-if (cb) cb.style.display = "none";
-activeCampaignKey = "";
-
-
-  
-  files
-  .filter(f => f.mimeType === 'application/vnd.google-apps.folder')
-  .sort((a,b) => a.name.localeCompare(b.name, 'fr', { sensitivity:'base' }))
-  .forEach(f => {
-
-    const li = document.createElement('li'); 
-    li.dataset.id = f.id;
-
-    const toggle = document.createElement('span'); 
-    toggle.className = 'folder-toggle'; 
-    toggle.textContent = '';
-    toggle.onclick = () => toggleFolder(li);
-
-const span = document.createElement('span');
-span.className = 'folder-name';
-
-const lowerName = f.name.toLowerCase();
-
-if (lowerName.includes("gaz")) {
-  span.innerHTML = `⛽ ${f.name}`;
-} else if (lowerName.includes("echantillonnage")) {
-  span.innerHTML = `📖 ${f.name}`;
-} else if (lowerName.includes("capture")) {
-  span.innerHTML = `🖼️ ${f.name}`;
-} else if (lowerName.includes("rapport")) {
-  span.innerHTML = `📄 ${f.name}`;
-} else if (lowerName.includes("historique")) {
-  span.innerHTML = `🗂️ ${f.name}`;
-} else if (lowerName.includes("traça_temp") || lowerName.includes("traca_temp")) {
-  span.innerHTML = `📈 ${f.name}`;
-} else {
-  span.textContent = f.name;
-}
-
-
-
-
-span.onclick = (e) => loadFolderFilesOnClick(li, e);
-
-
-
-
-
-    li.appendChild(toggle); 
-    li.appendChild(span); 
-    rootUL.appendChild(li);
-  });
-
-  // 🔥 Vérifier automatiquement deux crans plus bas sans ouvrir visuellement
-  setTimeout(async () => {
-    const siteFolders = document.querySelectorAll("#folderTree > li");
-
-    for (const siteLi of siteFolders) {
-      const subFolders = await fetchChildren(siteLi.dataset.id);
-      for (const sub of subFolders) {
-        if (sub.name.includes("Temp")) {
-          await checkTraçaTempToday(siteLi, sub.id); 
-        }
-      }
-    }
-  }, 1000);
-}
-
-async function toggleFolder(li){
-  const toggle=li.querySelector('.folder-toggle');
-if(li.dataset.loaded==='true'){
-  const ul = li.querySelector('ul');
-  // ✅ Ne replie pas le parent si on clique un sous-dossier
-  if (!ul) return;
-  if (event && event.target && !event.target.classList.contains('folder-name')) return;
-  ul.style.display = ul.style.display === 'none' ? 'block' : 'none';
-  return;
-}
-
-  toggle.textContent='…';
-  const files=await fetchFolderContents(li.dataset.id);
-  const ul=document.createElement('ul');
-  const folders = files
-  .filter(f => f.mimeType === 'application/vnd.google-apps.folder')
-  .sort((a,b) => a.name.localeCompare(b.name, 'fr', { sensitivity:'base' }));
-
-for (const f of folders) {
-
-    const childLi=document.createElement('li'); 
-    childLi.dataset.id=f.id;
-
-    const childToggle=document.createElement('span'); 
-    childToggle.className='folder-toggle'; 
-    childToggle.textContent='';
-    childToggle.onclick=()=>toggleFolder(childLi);
-
-const span = document.createElement('span');
-span.className = 'folder-name';
-
-const lowerName = f.name.toLowerCase();
-
-if (lowerName.includes("gaz")) {
-  span.innerHTML = `⛽ ${f.name}`;
-} else if (lowerName.includes("echantillonnage")) {
-  span.innerHTML = `📖 ${f.name}`;
-} else if (lowerName.includes("capture")) {
-  span.innerHTML = `🖼️ ${f.name}`;
-} else if (lowerName.includes("rapport")) {
-  span.innerHTML = `📄 ${f.name}`;
-} else if (lowerName.includes("historique")) {
-  span.innerHTML = `🗂️ ${f.name}`;
-} else if (lowerName.includes("traça_temp") || lowerName.includes("traca_temp")) {
-  span.innerHTML = `📈 ${f.name}`;
-} else {
-  span.textContent = f.name;
-}
-
-
-
-span.onclick = (e) => loadFolderFilesOnClick(childLi, e);
-
-
-
-    childLi.appendChild(childToggle); 
-    childLi.appendChild(span); 
-    ul.appendChild(childLi);
-
-    // ✅ Cas spécial : si le dossier est Traça_Temp → précharger Historique
-    if (f.name.toLowerCase().includes("traça_temp") || f.name.toLowerCase().includes("traca_temp")) {
-      const siblings = await fetchFolderContents(li.dataset.id);
-      const hist = siblings.find(s => s.mimeType === 'application/vnd.google-apps.folder' && s.name.toLowerCase().includes("historique"));
-      if (hist) {
-        const histFiles = await fetchFolderContents(hist.id);
-        const z3Files = histFiles.filter(ff => ff.name.toUpperCase().startsWith("Z3") && ff.name.toLowerCase().endsWith(".csv"));
-localStorage.setItem("csvZ3Files", JSON.stringify(z3Files));
-console.log("[Z3] Préchargés depuis Historique:", z3Files.length);
-showEventAlert();
-
-      }
-    }
-
-    // ✅ Vérif Temp (flamme 🔥)
-    if(f.name.includes("Temp")){ checkTraçaTempToday(li, f.id); }
-  }
-  li.appendChild(ul); 
-  li.dataset.loaded='true'; 
-  toggle.textContent='';
-}
-
-
 // Fonction utilitaire pour récupérer les sous-dossiers sans modifier l'affichage
 async function fetchChildren(folderId){
   const files = await fetchFolderContents(folderId);
-  return files.filter(f => f.mimeType === 'application/vnd.google-apps.folder');
+  return files.filter(isDriveFolderOrShortcutFolder);
 }
 
+function collapseRootSite(li){
+  if (!li) return;
+
+  const ul = li.querySelector("ul");
+  if (ul) {
+    ul.style.display = "none";
+  }
+
+  // enlève la sélection visuelle dans ce site
+  li.querySelectorAll("span.folder-name")
+    .forEach(s => s.classList.remove("active-folder"));
+}
+
+async function loadRootFolders(){
+
+  const rootUL = document.getElementById('folderTree');
+  rootUL.innerHTML = '';
+
+  // 🔵 MODE SITE → comportement EXACTEMENT comme avant
+  if (ROOT_MODE === "site") {
+
+    const files = await fetchFolderContents(ROOT_FOLDER_ID);
+
+    document.querySelector(".controls").style.display = "none";
+    const cb = document.getElementById("campaignBox");
+    if (cb) cb.style.display = "none";
+    activeCampaignKey = "";
+
+    const rootFolders = files
+      .filter(isDriveFolderOrShortcutFolder)
+      .sort((a,b) => a.name.localeCompare(b.name,'fr',{sensitivity:'base'}));
+
+    renderRootTiles(rootFolders);
+
+    rootFolders.forEach(f => {
+      const li = document.createElement('li');
+      li.dataset.id = getDriveFolderId(f);
+
+      const toggle = document.createElement('span');
+      toggle.className = 'folder-toggle';
+      toggle.onclick = (e) => toggleFolder(li, e);
+
+      const span = document.createElement('span');
+      span.className = 'folder-name';
+      span.innerHTML = `${getFolderIcon(f.name)} ${f.name}`;
+      applyFolderTooltip(span, f.name);
+
+span.onclick = async (e) => {
+  e?.stopPropagation?.();
+
+  const ul = li.querySelector("ul");
+  const isAlreadyOpen = ul && ul.style.display !== "none";
+
+  // ✅ Si on reclique sur un site déjà déplié, on le replie
+  if (isAlreadyOpen) {
+    collapseRootSite(li);
+
+    // Si c'est le site actuellement affiché, on cache aussi le contenu central
+    hideSiteTiles();
+    hideTable();
+    document.querySelector(".controls").style.display = "none";
+
+    return;
+  }
+
+  // ✅ Sinon on ouvre normalement ce site
+  document.querySelector(".controls").style.display = "flex";
+  await openSiteAndShowTiles(li.dataset.id, f.name);
+};
+
+      li.appendChild(toggle);
+      li.appendChild(span);
+      rootUL.appendChild(li);
+    });
+
+    return;
+  }
+
+  // 🟠 MODE COOP → un cran au-dessus
+
+  const coopFolders = await fetchFolderContents(ROOT_FOLDER_ID);
+
+  const sites = coopFolders
+    .filter(isDriveFolderOrShortcutFolder)
+    .sort((a,b)=>a.name.localeCompare(b.name,'fr',{sensitivity:'base'}));
+
+  // Pas de tuiles racine en coop
+  hideSiteTiles();
+
+  sites.forEach(site => {
+
+    const li = document.createElement('li');
+    li.dataset.id = getDriveFolderId(site);
+
+    const toggle = document.createElement('span');
+    toggle.className = 'folder-toggle';
+    toggle.onclick = (e)=>toggleFolder(li,e);
+
+    const span = document.createElement('span');
+    span.className = 'folder-name';
+    span.innerHTML = `📁 ${site.name}`;
+
+    span.onclick = async (e)=>{
+      e?.stopPropagation?.();
+      document.querySelector(".controls").style.display = "flex";
+      await openSiteAndShowTiles(li.dataset.id, site.name);
+    };
+
+    li.appendChild(toggle);
+    li.appendChild(span);
+    rootUL.appendChild(li);
+  });
+
+}
+
+
+
+  // 🔥 Vérifier automatiquement deux crans plus bas sans ouvrir visuellement
+  setTimeout(async () => {
+    const siteFolders = Array.from(document.querySelectorAll("#folderTree > li"));
+
+    const limit = 3;
+    let idx = 0;
+
+    async function worker(){
+      while(idx < siteFolders.length){
+        const siteLi = siteFolders[idx++];
+        const subFolders = await fetchChildren(siteLi.dataset.id);
+
+        for (const sub of subFolders) {
+          if ((sub.name || "").includes("Temp")) {
+            await checkTraçaTempToday(siteLi, getDriveFolderId(sub));
+          }
+        }
+      }
+    }
+
+    await Promise.all(Array.from({ length: limit }, worker));
+  }, 1000);
+
+
+
+
+async function expandFolder(li){
+  if (!li) return;
+
+  // Si pas encore chargé → on charge
+  if (li.dataset.loaded !== "true") {
+    await toggleFolder(li); 
+    // toggleFolder va créer <ul> et laisser affiché
+    return;
+  }
+
+  // Si déjà chargé → on force ouvert (NE PAS REPLIER)
+  const ul = li.querySelector("ul");
+  if (ul) ul.style.display = "block";
+}
+
+
+
+
+  
+async function toggleFolder(li, event){
+
+  // 🛡️ Anti double-clic / anti double chargement concurrent
+  if (li.dataset.loading === "true") return;
+  li.dataset.loading = "true";
+
+  try {
+    const toggle = li.querySelector('.folder-toggle');
+
+if (li.dataset.loaded === 'true') {
+  const ul = li.querySelector('ul');
+  if (!ul) return;
+
+  // ✅ APPEL PROGRAMMATIQUE → on ASSURE ouvert
+  if (!event) {
+    ul.style.display = 'block';
+    return;
+  }
+
+  // ✅ CLIC UTILISATEUR SUR LA FLÈCHE → toggle
+  ul.style.display = (ul.style.display === 'none') ? 'block' : 'none';
+  return;
+}
+
+
+    toggle.textContent = '…';
+
+    const files = await fetchFolderContents(li.dataset.id);
+
+
+
+
+    
+    const ul = document.createElement('ul');
+
+const folders = files
+  .filter(isDriveFolderOrShortcutFolder)
+  .sort((a,b) => a.name.localeCompare(b.name, 'fr', { sensitivity:'base' }));
+
+for (const f of folders) {
+  const childLi = document.createElement('li');
+  childLi.dataset.id = getDriveFolderId(f);
+
+      const childToggle = document.createElement('span');
+      childToggle.className = 'folder-toggle';
+      childToggle.textContent = '';
+
+      // ✅ IMPORTANT: passer l’event
+      childToggle.onclick = (e) => toggleFolder(childLi, e);
+
+      const span = document.createElement('span');
+      span.className = 'folder-name';
+
+      const icon = getFolderIcon(f.name);
+      span.innerHTML = `${icon} ${f.name}`;
+      applyFolderTooltip(span, f.name);
+
+      span.onclick = (e) => loadFolderFilesOnClick(childLi, e);
+
+      childLi.appendChild(childToggle);
+      childLi.appendChild(span);
+      ul.appendChild(childLi);
+
+      // ✅ Vérif Temp (flamme 🔥)
+      if (f.name.includes("Temp")) {
+  checkTraçaTempToday(li, getDriveFolderId(f));
+}
+
+    }
+
+    li.appendChild(ul);
+    li.dataset.loaded = 'true';
+    toggle.textContent = '';
+
+  } finally {
+    li.dataset.loading = "false";
+  }
+
+}
+
+
+
+
+
+
+
+  
 async function loadFolderFilesOnClick(li, event){
+let filtered = [];
+  isUserNavigating = true;   // 🔒 début navigation utilisateur
+startScan();   // 🔄
+  try {
+
+
+
+  // ✅ 1) Si li est absent (appel auto / refresh / filtre), on tente de le retrouver
+  if (!li) {
+    const lastId = localStorage.getItem("lastFolderId");
+    if (lastId) {
+      li = document.querySelector(`#folderTree li[data-id="${lastId}"]`);
+    }
+  }
+
+  // ✅ 2) Si toujours rien, on sort proprement (plus de ReferenceError)
+  if (!li) {
+    console.warn("[loadFolderFilesOnClick] appelé sans li valide");
+    return;
+  }
+
+  // ✅ 3) Sécurité bonus : si li n’a pas dataset.id, on tente de le reconstruire
+  if (!li.dataset || !li.dataset.id) {
+    const lastId = localStorage.getItem("lastFolderId");
+    if (lastId) {
+      const fallback = document.querySelector(`#folderTree li[data-id="${lastId}"]`);
+      if (fallback) li = fallback;
+    }
+  }
+
   // reset des notes
   storedNotes = {};
   if (typeof jsonDates !== "undefined") jsonDates.clear?.();
@@ -1355,22 +1724,26 @@ async function loadFolderFilesOnClick(li, event){
 
   await toggleFolder(li);
 
-// 🔄 Réinitialiser la sélection visuelle
-document.querySelectorAll('#folderTree li span.folder-name').forEach(s => s.classList.remove('active-folder'));
+  // 🔄 Réinitialiser la sélection visuelle
+  document.querySelectorAll('#folderTree li span.folder-name')
+    .forEach(s => s.classList.remove('active-folder'));
 
-// ✅ Surligne le dossier cliqué
-const nameSpan = li.querySelector('span.folder-name');
-if (nameSpan) nameSpan.classList.add('active-folder');
+  // ✅ Surligne le dossier cliqué
+  const nameSpan = li.querySelector('span.folder-name');
+  if (nameSpan) nameSpan.classList.add('active-folder');
 
-// ✅ Surligne aussi tous les parents (chemin hiérarchique)
-let parentLi = li.parentElement.closest('li');
-while (parentLi) {
-  const parentSpan = parentLi.querySelector('span.folder-name');
-  if (parentSpan) parentSpan.classList.add('active-folder');
-  parentLi = parentLi.parentElement.closest('li');
-}
+  // ✅ Surligne aussi tous les parents (chemin hiérarchique)
+  let parentLi = li.parentElement.closest('li');
+  while (parentLi) {
+    const parentSpan = parentLi.querySelector('span.folder-name');
+    if (parentSpan) parentSpan.classList.add('active-folder');
+    parentLi = parentLi.parentElement.closest('li');
+  }
 
-  localStorage.setItem('lastFolderId', li.dataset.id);
+  // ✅ Ne set le lastFolderId que si on peut
+  if (li.dataset?.id) {
+    localStorage.setItem('lastFolderId', li.dataset.id);
+  }
 
 // 📂 Sauvegarde du chemin complet (ex: Voreppe/Traça_Temp)
 function buildFullFolderPath(li) {
@@ -1391,52 +1764,121 @@ console.log("[Folder] Chemin complet enregistré :", fullPath);
 
   const folderName = nameSpan ? nameSpan.textContent.toLowerCase() : "";
 
-  // ⚡ Gestion spéciale Z3
-  if (folderName.includes("traça_temp") || folderName.includes("traca_temp")) {
-    // récupérer le dossier parent (= site)
-    const siteLi = li.parentElement.closest("li");
-    if (siteLi && siteLi.dataset.id) {
+// ⚡ Gestion spéciale Z3 (cache des fichiers Z3 depuis "Historique")
+const folderNameLower = (nameSpan ? nameSpan.textContent : "").toLowerCase();
+
+if (folderNameLower.includes("traça_temp") || folderNameLower.includes("traca_temp")) {
+
+  const siteLi = li.parentElement.closest("li");
+
+  if (siteLi && siteLi.dataset.id) {
+    try {
       const siblings = await fetchFolderContents(siteLi.dataset.id);
-      const hist = siblings.find(s => 
-        s.mimeType === 'application/vnd.google-apps.folder' && 
-        s.name.toLowerCase().includes("historique")
+
+      const hist = siblings.find(s =>
+        isDriveFolderOrShortcutFolder(s) &&
+        (s.name || "").toLowerCase().includes("historique")
       );
 
       if (hist) {
-        const histFiles = await fetchFolderContents(hist.id);
-        const z3Files = histFiles.filter(ff => 
-          ff.name.toUpperCase().startsWith("Z3") && 
-          ff.name.toLowerCase().endsWith(".csv")
-        );
+        const histId = getDriveFolderId(hist);
+        const histFiles = await fetchFolderContents(histId);
+
+const z3Files = histFiles.filter(ff =>
+  /^z3/i.test(ff.name) &&
+  /\.csv$/i.test(ff.name)
+);
+
+
         localStorage.setItem("csvZ3Files", JSON.stringify(z3Files));
         console.log("[Z3] Préchargés depuis Historique voisin:", z3Files.length);
       } else {
         localStorage.removeItem("csvZ3Files");
-        console.warn("[Z3] Aucun dossier Historique trouvé pour", nameSpan.textContent);
       }
+
+    } catch (e) {
+      console.error("[Z3] Erreur préchargement Historique:", e);
+      localStorage.removeItem("csvZ3Files");
     }
-  } 
-  else if (folderName.includes("historique")) {
-    // directement charger les Z3 de ce dossier
-    const histFiles = await fetchFolderContents(li.dataset.id);
-    const z3Files = histFiles.filter(ff => 
-      ff.name.toUpperCase().startsWith("Z3") && 
-      ff.name.toLowerCase().endsWith(".csv")
-    );
-    localStorage.setItem("csvZ3Files", JSON.stringify(z3Files));
-    console.log("[Z3] Préchargés directement (Historique):", z3Files.length);
-  } 
-  else {
-    // Sinon → effacer le cache Z3
-    localStorage.removeItem("csvZ3Files");
-    console.log("[Z3] Cache vidé (hors Traça_Temp / Historique)");
   }
 
-  // Charger fichiers CSV/JPG classiques du dossier
-  const files = await fetchFolderContents(li.dataset.id);
-const filtered = files.filter(f =>
+} else if (folderNameLower.includes("historique")) {
+
+  try {
+    const histFiles = await fetchFolderContents(li.dataset.id);
+
+    const z3Files = histFiles.filter(ff =>
+      ff.name.toUpperCase().startsWith("Z3") &&
+      ff.name.toLowerCase().endsWith(".CSV")
+    );
+
+    localStorage.setItem("csvZ3Files", JSON.stringify(z3Files));
+    console.log("[Z3] Préchargés directement (Historique):", z3Files.length);
+
+  } catch (e) {
+    console.error("[Z3] Erreur lecture Historique:", e);
+    localStorage.removeItem("csvZ3Files");
+  }
+
+} else {
+  localStorage.removeItem("csvZ3Files");
+}
+
+
+
+
+const files = await fetchFolderContents(li.dataset.id);
+
+// ✅ fichiers visibles (portée globale dans la fonction)
+filtered = (files || []).filter(f =>
   /\.(csv|jpg|jpeg|png|gif|webp|json|pdf|mp4|webm|mov|m4v|avi|ppsx|pptx)$/i.test(f.name)
 );
+
+
+// ✅ sous-dossiers
+const subFolders = (files || []).filter(isDriveFolderOrShortcutFolder);
+
+// fichiers réellement affichables (hors json techniques)
+const displayableFiles = filtered.filter(f =>
+  !f.name.toLowerCase().endsWith(".json")
+);
+
+
+console.log("DEBUG displayableFiles:", displayableFiles.length);
+console.log("DEBUG subFolders:", subFolders.length);
+
+console.log("FILES RAW:", files.length);
+console.log("FILTERED:", filtered.length);
+console.log("DISPLAYABLE:", displayableFiles.length);
+console.log("SUBFOLDERS:", subFolders.length);
+    
+
+
+const hasCsv = (files || []).some(f =>
+  f.name && f.name.toLowerCase().endsWith(".csv")
+);
+
+// 🚫 Mode tuiles UNIQUEMENT si aucun fichier affichable
+if (!hasCsv && subFolders.length > 0) {
+  const folderName = li.querySelector(".folder-name")?.textContent?.trim() || "";
+  await renderSiteSubfolderTiles(li.dataset.id, folderName);
+  return;
+}
+
+// ✅ Sinon → on affiche les fichiers
+hideSiteTiles();
+showTable();
+
+await displayFiles(files, folderName);
+
+
+
+
+
+
+
+  
+
 
 
 
@@ -1451,6 +1893,9 @@ const siteId = siteRootLi?.dataset.id || null;
 
 
 if (siteId && siteId !== currentSiteId) {
+
+
+  
   clearSiteHotDays();
   currentSiteId = siteId;
   console.log(`[SITE] Changement de site → ${siteRootLi?.querySelector(".folder-name")?.textContent}`);
@@ -1495,21 +1940,24 @@ document.querySelectorAll('#csvTable tbody tr').forEach(tr => {
 } else if (siteId && Object.keys(hotDaysMap).length === 0) {
   hotDaysMap = loadSiteHotDays(siteId);
   if (Object.keys(hotDaysMap).length === 0) {
-    console.log(`[CACHE] Aucun cache trouvé pour ${siteLi.querySelector(".folder-name")?.textContent}, relance du scan...`);
-    scanSiteHotDays(siteId).then(map => {
-      hotDaysMap = map;
-      console.log(`[CACHE] 🔥 ${Object.keys(hotDaysMap).length} jours chauds détectés et chargés pour ${siteLi.querySelector(".folder-name")?.textContent}`);
-      const active = document.querySelector('#folderTree .active-folder');
-      if (active) active.click();
-    });
+    console.log(`[CACHE] Aucun cache trouvé pour ${li?.querySelector(".folder-name")?.textContent}, relance du scan...`);
+
+scanSiteHotDays(siteId).then(map => {
+  hotDaysMap = map;
+  console.log(`[CACHE] 🔥 ${Object.keys(hotDaysMap).length} jours chauds détectés et chargés pour ${siteRootLi?.querySelector(".folder-name")?.textContent}`);
+});
+
   } else {
     console.log(`[CACHE] ${Object.keys(hotDaysMap).length} jours chauds chargés depuis cache`);
   }
 }
 
-previewFiles = filtered.filter(f => /\.(jpg|jpeg|pdf|mp4|gif|webm|mov|m4v)$/i.test(f.name));
+previewFiles = filtered
+  .filter(f => /\.(jpg|jpeg|png|gif|webp|pdf|mp4|webm|mov|m4v)$/i.test(f.name))
+  .map(f => ({ ...f, _realId: getDriveFileId(f) }));
 
-displayFiles(filtered, nameSpan ? nameSpan.textContent : '');
+
+
 
 
 
@@ -1527,11 +1975,106 @@ if (Object.keys(hotDaysMap).length > 0) {
   });
 }
 
+  } finally {
+    isUserNavigating = false;
+    endScan();   // 🔄 fin chargement dossier
+  }
+
+
+    
 }
 
+async function getCompteursTempsLastLine(file){
+  try {
+    const realId = getDriveFileId(file);
+
+    const res = await fetch(
+      `https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(file.name)}&site=Smes_Acces`
+    );
+
+    if (!res.ok) return null;
+
+    const text = await res.text();
+    const lines = text
+      .split(/\r?\n/)
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    if (lines.length < 2) return null;
+
+    function parseCSV(line) {
+      const result = [];
+      let current = "";
+      let insideQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+
+        if (c === '"' && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else if (c === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (c === "," && !insideQuotes) {
+          result.push(current);
+          current = "";
+        } else {
+          current += c;
+        }
+      }
+
+      result.push(current);
+      return result.map(v => v.trim());
+    }
+
+    const header = parseCSV(lines[0]);
+    const last = parseCSV(lines[lines.length - 1]);
+
+    // ✅ Sécurité : si la dernière ligne n'a pas assez de colonnes, on considère le fichier inexploitable
+if (last.length < header.length || last.length < 10) {
+  return null;
+}
+
+    function get(colName){
+      const idx = header.findIndex(h => h.toLowerCase() === colName.toLowerCase());
+      if (idx === -1) return "0";
+      return (last[idx] || "0").trim();
+    }
+
+    function hm(hCol, mCol){
+      const h = parseInt(get(hCol), 10) || 0;
+      const m = parseInt(get(mCol), 10) || 0;
+      return `${h}h${String(m).padStart(2, "0")}`;
+    }
+
+    return {
+      cycleAvecBr: hm("Tps Cycle avec Br h", "Tps Cycle avec Br m"),
+      cycleSansBr: hm("Tps Cycle sans Br h", "Tps Cycle sans Br m"),
+      bruleurInf: hm("Tps Bruleur Inf h", "Tps Bruleur Inf m"),
+      bruleurSup: hm("Tps Bruleur Sup h", "Tps Bruleur Sup m")
+    };
+
+  } catch (e) {
+    console.warn("[Compteurs Temps] Erreur lecture :", file.name, e);
+    return null;
+  }
+}
+
+  
 async function displayFiles(files, folderName){
 
+  hideSiteTiles();
+
+
   const tbody=document.querySelector('#csvTable tbody');
+
+
+  const folderLower = folderName.toLowerCase();
+const isCompteursTemps = folderLower.includes("compteurs temps");
+
+  // Reset total historique
+  historiqueDurations = [];
+  
   const downloadBtn=document.getElementById('downloadFolderBtn');
   tbody.innerHTML='';
 
@@ -1541,6 +2084,7 @@ async function displayFiles(files, folderName){
   const gazTasks = []; // ✅ ICI (une seule fois)
 
 
+const siteIdForDisplay = currentSiteId;
 
 
   
@@ -1554,6 +2098,120 @@ document.querySelector(".controls").style.display = "flex";
     return;
   }
 
+// ✅ Pour Compteurs Temps : on cherchera le CSV le plus récent NON VIDE
+let latestCompteursTempsFile = null;
+let latestCompteursTempsData = null;
+
+if (isCompteursTemps) {
+  const compteursCsvFiles = files
+    .filter(f => /(\d{8})\.csv$/i.test(f.name))
+    .sort((a, b) => {
+      const da = (a.name.match(/(\d{8})\.csv$/i) || ["", ""])[1];
+      const db = (b.name.match(/(\d{8})\.csv$/i) || ["", ""])[1];
+      return db.localeCompare(da); // plus récent en premier
+    });
+
+  for (const f of compteursCsvFiles) {
+    const data = await getCompteursTempsLastLine(f);
+
+    // ✅ si data existe, c'est que le CSV contient une vraie dernière ligne exploitable
+    if (data) {
+      latestCompteursTempsFile = f;
+      latestCompteursTempsData = data;
+      break;
+    }
+  }
+}
+
+if (isCompteursTemps && latestCompteursTempsFile && latestCompteursTempsData) {
+  tbody.insertAdjacentHTML("beforeend", `
+    <tr>
+      <td colspan="6" style="
+        text-align:center;
+        padding:14px;
+        background:var(--accent-muted);
+        border-bottom:3px solid var(--accent);
+      ">
+        <div style="
+          font-weight:bold;
+          color:var(--accent-darker);
+          margin-bottom:8px;
+        ">
+          ⏱️ Derniers compteurs disponibles
+          <span style="font-size:12px;font-weight:normal;color:var(--muted-text);">
+            depuis ${latestCompteursTempsFile.name}
+          </span>
+        </div>
+
+        <div style="
+          display:flex;
+          flex-wrap:wrap;
+          justify-content:center;
+          gap:6px;
+          font-size:12px;
+        ">
+          <span class="gaz-btn">Cycle avec Brûleur : ${latestCompteursTempsData.cycleAvecBr}</span>
+          <span class="gaz-btn">Cycle sans Brûleur : ${latestCompteursTempsData.cycleSansBr}</span>
+          <span class="gaz-btn">Brûleur Inf : ${latestCompteursTempsData.bruleurInf}</span>
+          <span class="gaz-btn">Brûleur Sup : ${latestCompteursTempsData.bruleurSup}</span>
+        </div>
+      </td>
+    </tr>
+  `);
+}
+
+
+  
+// ✅ Alerte si aucun fichier récent depuis au moins 7 jours
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const limitDate = new Date(today);
+limitDate.setDate(limitDate.getDate() - 7);
+
+let latestFileDate = null;
+
+for (const f of files) {
+  const m = f.name.match(/(\d{8})\.csv$/i);
+  if (!m) continue;
+
+  const d = new Date(
+    Number(m[1].slice(0, 4)),
+    Number(m[1].slice(4, 6)) - 1,
+    Number(m[1].slice(6, 8))
+  );
+
+  if (!latestFileDate || d > latestFileDate) {
+    latestFileDate = d;
+  }
+}
+
+let serverDisconnectedWarning = "";
+
+if (latestFileDate && latestFileDate < limitDate) {
+  serverDisconnectedWarning = `
+    <tr>
+      <td colspan="6" style="
+        text-align:center;
+        padding:16px;
+        font-size:18px;
+        font-weight:bold;
+        color:var(--danger);
+        background:var(--accent-muted);
+        border-bottom:3px solid var(--danger);
+      ">
+        ⚠️ L'ordinateur est déconnecté du serveur
+        <br>
+        <span style="font-size:13px;font-weight:normal;color:var(--muted-text);">
+          Dernier fichier reçu le ${latestFileDate.toLocaleDateString("fr-FR")}
+        </span>
+      </td>
+    </tr>
+  `;
+
+  tbody.insertAdjacentHTML("beforeend", serverDisconnectedWarning);
+}
+  
 
   downloadBtn.style.display="inline-block";
 
@@ -1562,7 +2220,10 @@ downloadBtn.style.display="inline-block";
 const exportBtn = document.getElementById("exportCsvBtn");
 const excelBtn  = document.getElementById("exportExcelGazBtn");
 
-
+// ✅ Pas de bouton Courbes / Graphique pour Compteurs Temps
+if (isCompteursTemps) {
+  exportBtn.style.display = "none";
+}
 
 // === Gestion affichage boutons et pastilles GAZ ===
 if (folderName.toLowerCase().includes("consommation gaz")) {
@@ -1582,6 +2243,13 @@ if (folderName.toLowerCase().includes("consommation gaz")) {
     excelBtnGaz.insertAdjacentElement("afterend", summaryDiv);
   }
 } else {
+
+if (isCompteursTemps) {
+  exportBtn.style.display = "none";
+  excelBtn.style.display = "none";
+}
+
+  
   // --- Masquage des boutons GAZ ---
   exportBtn.style.display = "none";
   excelBtn.style.display  = "none";
@@ -1605,9 +2273,11 @@ await Promise.all(
       const key = m[1];
 
       try {
-        const res = await fetch(
-          `https://smes21540.netlify.app/.netlify/functions/drive?id=${file.id}&name=${encodeURIComponent(file.name)}&site=Smes_Acces`
-        );
+        const realId = getDriveFileId(file);
+const res = await fetch(
+  `https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(file.name)}&site=Smes_Acces`
+);
+
         if (!res.ok) return;
 
         const text = await res.text();
@@ -1648,9 +2318,14 @@ function addNote(cell){
 
 
 
-for(const f of files){
-    // ❌ On n'affiche pas les .json : ils servent juste à poser 📝
-    if (f.name.toLowerCase().endsWith(".json")) continue;
+for (const f of files) {
+
+  // ✅ ID réel (si shortcut → targetId, sinon id normal)
+  const realId = getDriveFileId(f);
+
+  // ❌ On n'affiche pas les .json : ils servent juste à poser 📝
+  if (f.name.toLowerCase().endsWith(".json")) continue;
+
 
     // Date
     let date='';
@@ -1718,6 +2393,7 @@ if (date) {
 const tdName = document.createElement('td');
 tdName.textContent = f.name;
 
+
 // === FLAMME FILE (avec cancelScan) ===
 if (f.name.toLowerCase().endsWith(".csv") &&
     (folderName.toLowerCase().includes("traça_temp") || folderName.toLowerCase().includes("traca_temp"))) {
@@ -1729,7 +2405,8 @@ if (f.name.toLowerCase().endsWith(".csv") &&
     try {
       if (cancelScan) { tdName.innerHTML = f.name; return; } // 🛑 stop si demandé
 
-      const url = `https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`;
+      const url = `https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`;
+
 
       const res = await fetch(url);
       if (!res.ok) { tdName.innerHTML = f.name; return; }
@@ -1800,7 +2477,7 @@ if (mNote && jsonDates.has(mNote[1])) {
 }
 
 
-tdName.textContent = f.name;
+
 
 
     } catch(e) {
@@ -1830,22 +2507,43 @@ const tdFolder=document.createElement('td'); tdFolder.textContent=folderName;
 
     const tdAction=document.createElement('td'); tdAction.className='action-cell';
     let html='';
-if(f.name.toLowerCase().endsWith('.csv')){
-  html+=`<a href="https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&download=1&site=Smes_Acces" target="_blank">
-          <button class="action-btn">Télécharger</button>
-        </a>`;
-  html+=`<button class="action-btn" onclick="openViewer('viewer.html','${f.id}','${f.name}')">Tableau</button>`;
+if (f.name.toLowerCase().endsWith('.csv')) {
 
-  // 👇 bouton Courbes seulement si on n'est PAS dans Historique
-  if (!folderName.toLowerCase().includes("historique")) {
-    html+=`<button class="action-btn" onclick="openViewer('viewer02.html','${f.id}','${f.name}')">Courbes</button>`;
-  }
+  html += `<a href="https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(f.name)}&download=1&site=Smes_Acces" target="_blank">
+            <button class="action-btn" title="Télécharger le fichier">Télécharger</button>
+          </a>`;
+
+  html += `<button class="action-btn"
+        title="Afficher les données dans un tableau"
+        onclick="openViewer('viewer.html','${realId}','${f.name}')">
+  Tableau
+</button>
+`;
+
+// 👇 bouton Courbes seulement si on n'est PAS dans Historique ni Compteurs Temps
+if (
+  !folderName.toLowerCase().includes("historique") &&
+  !folderName.toLowerCase().includes("compteurs temps")
+) {
+  html += `<button class="action-btn"
+      title="Afficher les courbes des différentes données disponibles sur une période choisie"
+      onclick="openViewer('viewer02.html','${realId}','${f.name}')">
+Courbes
+</button>
+`;
+}
 
   // 👇 bouton Sondes uniquement si on est dans Traça_Temp
   if (folderName.toLowerCase().includes("traça_temp") || folderName.toLowerCase().includes("traca_temp")) {
-    html+=`<button class="action-btn" onclick="openViewer('index03.html','${f.id}','${f.name}')">Sondes</button>`;
+    html += `<button class="action-btn"
+        title="Visualiser les températures des sondes et les autres valeurs sur le plan du séchoir à un moment précis sur une sidebar"
+        onclick="openViewer('index03.html','${realId}','${f.name}')">
+  Sondes
+</button>
+`;
   }
 }
+
 
 
 
@@ -1868,7 +2566,8 @@ if (
   `;
 
   // ✅ on calcule APRÈS que la ligne est dans le DOM
-  gazTasks.push({ f, tdAction, tr, tdDate });
+  gazTasks.push({ f, tdAction, tr, tdDate, siteId: siteIdForDisplay });
+
 }
 
 
@@ -1879,49 +2578,67 @@ if (
 
 
 
+// === HISTORIQUE : placeholder durée cycle ===
+if (
+  folderName.toLowerCase().includes("historique") &&
+  f.name.toUpperCase().startsWith("Z3") &&
+  f.name.toLowerCase().endsWith(".csv")
+) {
 
+  html += `
+    <div class="gaz-group">
+      <button class="gaz-btn" disabled>⏱ Calcul...</button>
+    </div>
+  `;
 
-
-
-
-
-if(/\.(jpg|jpeg|png|gif|webp)$/i.test(f.name)){
-  html+=`<img src="https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&site=Smes_Acces"
-    onclick="openModal('${f.id}')"
-    alt="aperçu">`;
-
-  html+=`<a href="https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&download=1&site=Smes_Acces" target="_blank">
-          <button class="action-btn">Télécharger</button>
-        </a>`;
+  gazTasks.push({ f, tdAction, type: "historique" });
 }
 
 
+
+
+
+
+if (/\.(jpg|jpeg|png|gif|webp)$/i.test(f.name)) {
+
+  html += `<img src="https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(f.name)}&site=Smes_Acces"
+    onclick="openModal('${realId}')"
+    alt="aperçu">`;
+
+  html += `<a href="https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(f.name)}&download=1&site=Smes_Acces" target="_blank">
+            <button class="action-btn">Télécharger</button>
+          </a>`;
+}
+
+
+
 /* ✅ VIDEO (MP4/WEBM/MOV/M4V) */
-if(/\.(mp4|webm|mov|m4v)$/i.test(f.name)){
+if (/\.(mp4|webm|mov|m4v)$/i.test(f.name)) {
   html += `
-    <button class="action-btn" onclick="openModal('${f.id}')">Ouvrir</button>
-    <a href="https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&download=1&site=Smes_Acces" target="_blank">
+    <button class="action-btn" onclick="openModal('${realId}')">Ouvrir</button>
+    <a href="https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(f.name)}&download=1&site=Smes_Acces" target="_blank">
       <button class="action-btn">Télécharger</button>
     </a>
   `;
 }
+
 
 
 
 // === PDF ===
 if (f.name.toLowerCase().endsWith(".pdf")) {
   html += `
-    <a href="https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&download=1&site=Smes_Acces" target="_blank">
+    <a href="https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(f.name)}&download=1&site=Smes_Acces" target="_blank">
       <button class="action-btn">Télécharger</button>
     </a>
-    <button class="action-btn" onclick="openModal('${f.id}')">Ouvrir</button>
-
+    <button class="action-btn" onclick="openModal('${realId}')">Ouvrir</button>
   `;
 }
 
+
 // === PowerPoint (ppsx/pptx) ===
 if (/\.(ppsx|pptx)$/i.test(f.name)) {
-  const baseUrl = `https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`;
+  const baseUrl = `https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`;
 
   html += `
     <a href="${baseUrl}&download=1" target="_blank">
@@ -1932,6 +2649,7 @@ if (/\.(ppsx|pptx)$/i.test(f.name)) {
     </a>
   `;
 }
+
 
 
   
@@ -1953,13 +2671,46 @@ tr.appendChild(tdSize);
 
 // ✅ Lancer les calculs gaz avec limite de concurrence
 if (gazTasks.length) {
-  await runWithConcurrency(gazTasks, 6, computeGazForRow);
-  updateGazTotals();
+  await runWithConcurrency(gazTasks, 6, async (task) => {
+    if (task.type === "historique") {
+      await computeHistoriqueForRow(task);
+    } else {
+      await computeGazForRow(task);
+    }
+  });
 
+    updateGazTotals();
+  updateHistoriqueTotals();
+
+}
+
+// 📝 Réinjection FORCÉE des notes (ne touche pas aux flammes)
+document.querySelectorAll('#csvTable tbody tr').forEach(tr => {
+  const nameCell = tr.cells[3];
+  const flameCell = tr.cells[1];
+
+  if (!nameCell || !flameCell) return;
+
+  const m = nameCell.textContent.match(/(\d{8})\.csv$/i);
+  if (!m) return;
+
+  const key = m[1];
+
+  if (storedNotes[key]) {
+    if (!flameCell.innerHTML.includes("📝")) {
+      const txt = storedNotes[key].join("\n");
+
+      flameCell.insertAdjacentHTML(
+        "beforeend",
+        ` <span class="note" title="${txt}">📝</span>`
+      );
+    }
+  }
+});
 
   
 }
-}
+
 
 
 
@@ -2025,7 +2776,8 @@ async function openViewer(viewer, id, name){
   });
 
   localStorage.setItem("csvFilesList", JSON.stringify(allCsv));
-  const index = allCsv.findIndex(f => f.id === id);
+  const index = allCsv.findIndex(f => getDriveFileId(f) === id);
+
   localStorage.setItem("csvFileIndex", index);
 
   // 🔍 Vérifier plan_sondes.csv
@@ -2042,7 +2794,11 @@ localStorage.setItem("currentFolderPath", folderPath);
 
   if (planFile) {
     try {
-      const respPlan = await fetch(`https://smes21540.netlify.app/.netlify/functions/drive?id=${planFile.id}&name=${encodeURIComponent(planFile.name)}&site=Smes_Acces`);
+      const planId = getDriveFileId(planFile);
+const respPlan = await fetch(
+  `https://smes21540.netlify.app/.netlify/functions/drive?id=${planId}&name=${encodeURIComponent(planFile.name)}&site=Smes_Acces`
+);
+
       const textPlan = await respPlan.text();
       localStorage.setItem("planSondes", textPlan);
     } catch (e) {
@@ -2105,6 +2861,14 @@ async function clearFilter(){
   await refreshCurrentFolder();
 }
 
+function resetDateFilterUIAndState(){
+  // ✅ Au changement de site, on remet le filtre par défaut
+  setDefaultDateFilterFromAprilFirst();
+
+  // ✅ reset campagne visuelle
+  activeCampaignKey = "";
+  document.querySelectorAll(".campaign-btn").forEach(b => b.classList.remove("active"));
+}
 
 
 
@@ -2112,9 +2876,11 @@ async function clearFilter(){
 /* ----------- Modale images / pdf / video + navigation ----------- */
 
 function openModal(id) {
-  currentPreviewIndex = previewFiles.findIndex(f => f.id === id);
+  currentPreviewIndex = previewFiles.findIndex(f => (f._realId || f.id) === id);
   const file = previewFiles[currentPreviewIndex];
-  if (!file) return; // ✅ n'ouvre pas une modale vide
+  if (!file) return;
+
+  const realId = file._realId || file.id;
 
   const modal = document.getElementById('imageModal');
   modal.style.display = 'flex';
@@ -2123,60 +2889,44 @@ function openModal(id) {
   const video = document.getElementById('modalVideo');
   const img   = document.getElementById('modalImg');
 
-
   const url =
     `https://smes21540.netlify.app/.netlify/functions/drive` +
-    `?id=${id}&name=${encodeURIComponent(file.name)}&site=Smes_Acces`;
+    `?id=${realId}&name=${encodeURIComponent(file.name)}&site=Smes_Acces`;
 
   const isVideo = /\.(mp4|webm|mov|m4v)$/i.test(file.name);
   const isPdf   = /\.pdf$/i.test(file.name);
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
 
-  // 🔄 Reset complet
-  frame.style.display = "none";
-  frame.src = "";
+  // Reset
+  frame.style.display = "none"; frame.src = "";
+  video.pause(); video.style.display = "none"; video.src = "";
+  img.style.display = "none"; img.src = "";
 
-  video.pause();
-  video.style.display = "none";
-  video.src = "";
-
-  img.style.display = "none";
-  img.src = "";
-
-  // 🎯 Affichage selon type
   if (isVideo) {
-
     video.style.display = "block";
     video.src = url;
     video.load();
-
   } else if (isPdf) {
-
     frame.style.display = "block";
     frame.src = url;
-
   } else if (isImage) {
-
     img.style.display = "block";
     img.src = url;
-
   } else {
-
-    // fallback
     frame.style.display = "block";
     frame.src = url;
   }
 
-  // ⬇️ Bouton téléchargement
   document.getElementById('downloadBtn').onclick = () => {
     window.open(
       `https://smes21540.netlify.app/.netlify/functions/drive` +
-      `?id=${id}&name=${encodeURIComponent(file.name)}` +
+      `?id=${realId}&name=${encodeURIComponent(file.name)}` +
       `&download=1&site=Smes_Acces`,
       '_blank'
     );
   };
 }
+
 
 
 /* ----------- Fermeture modale ----------- */
@@ -2206,15 +2956,18 @@ function closeModal(){
 
 document.getElementById('prevBtn').onclick = () => {
   if (currentPreviewIndex > 0) {
-    openModal(previewFiles[--currentPreviewIndex].id);
+    const f = previewFiles[--currentPreviewIndex];
+    openModal(f._realId || f.id);
   }
 };
 
 document.getElementById('nextBtn').onclick = () => {
   if (currentPreviewIndex < previewFiles.length - 1) {
-    openModal(previewFiles[++currentPreviewIndex].id);
+    const f = previewFiles[++currentPreviewIndex];
+    openModal(f._realId || f.id);
   }
 };
+
 
 
 /* ----------- Click hors contenu = fermer ----------- */
@@ -2232,13 +2985,16 @@ window.addEventListener('keydown', e => {
   const modal = document.getElementById('imageModal');
   if (modal.style.display !== 'flex') return;
 
-  if (e.key === 'ArrowLeft' && currentPreviewIndex > 0) {
-    openModal(previewFiles[--currentPreviewIndex].id);
-  }
+if (e.key === 'ArrowLeft' && currentPreviewIndex > 0) {
+  const f = previewFiles[--currentPreviewIndex];
+  openModal(f._realId || f.id);
+}
 
-  if (e.key === 'ArrowRight' && currentPreviewIndex < previewFiles.length - 1) {
-    openModal(previewFiles[++currentPreviewIndex].id);
-  }
+if (e.key === 'ArrowRight' && currentPreviewIndex < previewFiles.length - 1) {
+  const f = previewFiles[++currentPreviewIndex];
+  openModal(f._realId || f.id);
+}
+
 
   if (e.key === 'Escape') {
     closeModal();
@@ -2298,7 +3054,9 @@ document.getElementById('downloadFolderBtn').onclick=async()=>{
   for(const f of files){
     if(zipCancelled) return;
     try{
-const url = `https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`;
+const realId = getDriveFileId(f);
+const url = `https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`;
+
 
 const res = await fetch(url);
 
@@ -2440,31 +3198,45 @@ let currentSiteId = null;
 let hotDaysMap = {}; // { 'YYYYMMDD': true }
 
 async function scanSiteHotDays(siteId) {
+
+  if (isUserNavigating) return {};   // 🚫 scan passif
+
+startScan(); 
+  
   const hotDays = {};
   console.time(`[SCAN] Durée scanSiteHotDays (${siteId})`);
   console.log(`[SCAN] Scan du site ${siteId} → dossier Traça_Temp`);
 
   try {
-    const siblings = await fetchFolderContents(siteId);
-    const tracatemp = siblings.find(s => 
-      s.mimeType === 'application/vnd.google-apps.folder' &&
-      (s.name.toLowerCase().includes("traça_temp") || s.name.toLowerCase().includes("traca_temp"))
-    );
+const siblings = await fetchFolderContents(siteId);
+
+const tracatemp = siblings.find(s =>
+  isDriveFolderOrShortcutFolder(s) &&
+  (
+    (s.name || "").toLowerCase().includes("traça_temp") ||
+    (s.name || "").toLowerCase().includes("traca_temp")
+  )
+);
+
+
 if (!tracatemp) {
   console.warn(`[SCAN] Aucun dossier Traça_Temp trouvé pour le site ${siteId}`);
   return hotDays;
 }
 
+const tracatempId = getDriveFolderId(tracatemp);     // ✅ ID réel (targetId si shortcut)
+const files = await fetchFolderContents(tracatempId);
 
-    const files = await fetchFolderContents(tracatemp.id);
     const csvFiles = files.filter(f => f.name.toLowerCase().endsWith(".csv"));
     console.log(`[SCAN] ${csvFiles.length} CSV trouvés dans ${tracatemp.name}`);
 
     for (const f of csvFiles) {
       try {
-        const res = await fetch(
-          `https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`
-        );
+const realId = getDriveFileId(f);
+const res = await fetch(
+  `https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`
+);
+
         if (!res.ok) continue;
 
         const text = await res.text();
@@ -2526,6 +3298,8 @@ return hotDays;
     console.error("[SCAN] Erreur générale scanSiteHotDays:", err);
     console.timeEnd(`[SCAN] Durée scanSiteHotDays (${siteId})`);
     return hotDays;
+      } finally {
+    endScan();   // 🔄 FIN INDICATEUR
   }
 }
 
@@ -2549,6 +3323,18 @@ function clearSiteHotDays() {
 
 /* ----------- 🔥 Vérif CSV du jour pour "Temp" ----------- */
 async function checkTraçaTempToday(parentLi, tracatempId) {
+
+  if (isUserNavigating) return;   // 🚫 bloque le scan pendant navigation
+
+
+  // 🚫 ne jamais agir si on n’est pas dans Traça_Temp
+  const activePath = localStorage.getItem("lastFolderPath") || "";
+  if (!activePath.toLowerCase().includes("traça_temp") &&
+      !activePath.toLowerCase().includes("traca_temp")) {
+    return;
+  }
+
+  
   const today = new Date();
   const yyyymmdd =
     today.getFullYear().toString() +
@@ -2561,7 +3347,9 @@ async function checkTraçaTempToday(parentLi, tracatempId) {
   if (!todayFile) return;
 
   try {
-const url = `https://smes21540.netlify.app/.netlify/functions/drive?id=${todayFile.id}&name=${encodeURIComponent(todayFile.name)}&t=${Date.now()}&site=Smes_Acces`;
+const realId = getDriveFileId(todayFile);
+const url = `https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(todayFile.name)}&t=${Date.now()}&site=Smes_Acces`;
+
 
 const res = await fetch(url);
 
@@ -2855,10 +3643,15 @@ document.getElementById("exportExcelGazBtn").addEventListener("click", function 
 // =========================================
 // === Calcule les valeurs GAZ pour une ligne
 // =========================================
-async function computeGazForRow({ f, tdAction, tr, tdDate }) {
-  const res = await fetch(
-    `https://smes21540.netlify.app/.netlify/functions/drive?id=${f.id}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`
-  );
+async function computeGazForRow({ f, tdAction, tr, tdDate, siteId }) {
+  startScan();   // 🔄 DÉBUT badge
+
+  try {
+const realId = getDriveFileId(f);
+const res = await fetch(
+  `https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`
+);
+
   if (!res.ok) throw new Error("Fetch CSV GAZ failed: " + res.status);
 
   const text = await res.text();
@@ -2983,11 +3776,24 @@ async function computeGazForRow({ f, tdAction, tr, tdDate }) {
 
   // TONNAGE (reprend ton code)
   const dateStr = tdDate.textContent.split(" ")[0];
-  const fullPath = localStorage.getItem("lastFolderPath") || "";
-  const siteRoot = fullPath.split("/")[0];
-  let tonnage = await getTonnageForDate(siteRoot, dateStr);
-  if (!isFinite(tonnage)) tonnage = 0;
+let tonnage = 0;
+if (siteId && dateStr) {
+  tonnage = await getTonnageForDate(siteId, dateStr);
+}
+
+
+
+
+if (tonnage === null || !isFinite(tonnage)) {
+  tr.dataset.tonnage = "";
+} else {
   tr.dataset.tonnage = Number(tonnage.toFixed(1));
+}
+
+  } finally {
+    endScan();   // 🔄 FIN badge
+  }
+    
 }
 
 
@@ -3001,6 +3807,9 @@ function updateGazTotals() {
 
   let totalM3 = 0;
   let totalKwh = 0;
+
+
+  
 
 document.querySelectorAll("#csvTable tbody tr").forEach(tr => {
   if (tr.style.display === "none") return;  // ne compte pas les lignes filtrées
@@ -3023,6 +3832,106 @@ document.querySelectorAll("#csvTable tbody tr").forEach(tr => {
   totalKwhSpan.textContent = `kWh total: ${Math.round(totalKwh).toLocaleString("fr-FR")}`;
 }
 
+
+function updateHistoriqueTotals() {
+
+  console.log("Historique durations:", historiqueDurations);
+
+const total = Object.values(historiqueDurations)
+  .filter(Number.isFinite)
+  .reduce((sum, val) => sum + val, 0);
+
+
+  let btn = document.getElementById("historiqueSumBtn");
+
+  if (total === 0) {
+    if (btn) btn.remove();
+    return;
+  }
+
+if (!btn) {
+  btn = document.createElement("button");
+  btn.id = "historiqueSumBtn";
+  btn.className = "gaz-total";   // 👈 même classe que Σ m3
+  btn.style.marginLeft = "10px";
+
+  const controls = document.querySelector(".controls");
+  controls.appendChild(btn);
+}
+
+
+  const H = String(Math.floor(total / 60)).padStart(2,"0");
+  const M = String(total % 60).padStart(2,"0");
+
+  btn.textContent = `⏱ ${H}:${M}`;
+
+let exportBtn = document.getElementById("historiqueExportBtn");
+
+if (!exportBtn) {
+  exportBtn = document.createElement("button");
+  exportBtn.id = "historiqueExportBtn";
+  exportBtn.className = "gaz-total";
+  exportBtn.style.marginLeft = "10px";
+  exportBtn.textContent = "Export Excel";
+
+  exportBtn.onclick = exportHistoriqueExcel;
+
+  const controls = document.querySelector(".controls");
+  controls.appendChild(exportBtn);
+}
+
+}
+
+function exportHistoriqueExcel() {
+
+  const data = Object.entries(historiqueDurations)
+    .map(([fileName, minutes]) => {
+
+      // Extraction date depuis Z3xxxxx_YYYYMMDD.csv
+      const match = fileName.match(/_(\d{8})/);
+
+      let formattedDate = "Date inconnue";
+
+      if (match) {
+        const raw = match[1]; // YYYYMMDD
+        const year  = raw.substring(0,4);
+        const month = raw.substring(4,6);
+        const day   = raw.substring(6,8);
+
+        formattedDate = `${day}/${month}/${year}`;
+      }
+
+      const H = Math.floor(minutes / 60);
+      const M = minutes % 60;
+
+      return {
+        "Date": formattedDate,
+        "Durée (minutes)": minutes,
+        "Durée (HH:MM)": 
+          String(H).padStart(2,"0") + ":" +
+          String(M).padStart(2,"0")
+      };
+    });
+
+  if (!data.length) return;
+
+  // Tri par date croissante
+  data.sort((a,b)=>{
+    const [d1,m1,y1] = a.Date.split("/");
+    const [d2,m2,y2] = b.Date.split("/");
+    return new Date(y1,m1-1,d1) - new Date(y2,m2-1,d2);
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Historique");
+
+  XLSX.writeFile(workbook, "Historique_Cycles.xlsx");
+}
+
+
+
+  
 // === Limiteur de concurrence (évite 200 fetch en même temps) ===
 async function runWithConcurrency(tasks, limit, worker) {
   let i = 0;
@@ -3050,6 +3959,132 @@ async function runWithConcurrency(tasks, limit, worker) {
 
 
 
+// =========================================
+// === Calcule durée cycle Historique (Z3)
+// =========================================
+async function computeHistoriqueForRow({ f, tdAction }) {
+
+  startScan();
+
+  try {
+
+    const realId = getDriveFileId(f);
+    const res = await fetch(
+      `https://smes21540.netlify.app/.netlify/functions/drive?id=${realId}&name=${encodeURIComponent(f.name)}&site=Smes_Acces`
+    );
+
+    if (!res.ok) return;
+
+    const text = await res.text();
+    const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+
+    let totalMinutes = 0;
+
+// ===== Parseur CSV robuste =====
+function parseCSV(line) {
+  const result = [];
+  let current = "";
+  let insideQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+
+    if (c === '"' && line[i + 1] === '"') {
+      current += '"';
+      i++;
+    }
+    else if (c === '"') {
+      insideQuotes = !insideQuotes;
+    }
+    else if (c === "," && !insideQuotes) {
+      result.push(current);
+      current = "";
+    }
+    else {
+      current += c;
+    }
+  }
+
+  result.push(current);
+  return result;
+}
+
+// ===== Lecture des lignes Z3 =====
+for (const line of lines.slice(3)) {
+
+  const cols = parseCSV(line);
+  if (!cols || cols.length < 5) continue;
+
+  const message = cols[2].trim();
+
+
+const lower = message.toLowerCase();
+
+if (
+  lower.includes("marrage cycle") &&
+  lower.includes("chage avec br")
+)
+ {
+
+    const startTime = cols[1].trim();
+    const endTime   = cols[4].trim();
+
+    if (!endTime) continue;
+
+    const [h1,m1,s1] = startTime.split(":").map(Number);
+    const [h2,m2,s2] = endTime.split(":").map(Number);
+
+    let seconds =
+      (h2*3600 + m2*60 + s2) -
+      (h1*3600 + m1*60 + s1);
+
+    if (seconds < 0) seconds += 24*3600;
+
+    totalMinutes += Math.floor(seconds / 60);
+  }
+}
+
+
+const btn = tdAction.querySelector(".gaz-btn");
+if (!btn) return;
+
+// 👉 Si aucun cycle trouvé → on masque le bouton
+if (totalMinutes === 0) {
+  btn.remove();
+  return;
+}
+
+// 👉 On stocke la durée pour le total global
+if (Number.isFinite(totalMinutes) && totalMinutes > 0) {
+  historiqueDurations[f.id] = totalMinutes;
+
+}
+
+
+
+const H = String(Math.floor(totalMinutes / 60)).padStart(2,"0");
+const M = String(totalMinutes % 60).padStart(2,"0");
+
+btn.textContent = `⏱ ${H}:${M}`;
+btn.disabled = false;
+
+btn.style.background = "linear-gradient(180deg, #bbdefb, #64b5f6)";
+btn.style.color = "#0d47a1";
+btn.style.minWidth = "120px";
+
+
+  } catch(e) {
+    console.warn("Erreur calcul Historique :", f.name);
+} finally {
+  endScan();
+}
+
+}
+
+
+
+  
+
 // ✅ évite le crash si #yearSelect n'existe plus
 function initYearSelect(){
   const ys = document.getElementById("yearSelect");
@@ -3059,6 +4094,202 @@ function initYearSelect(){
 
 const ys = document.getElementById("yearSelect");
 if (ys) ys.value = "";
+
+
+
+function showTable(){
+  const tw = document.getElementById("tableWrapper");
+  if (tw) tw.style.display = "block";
+}
+
+function hideTable(){
+  const tw = document.getElementById("tableWrapper");
+  if (tw) tw.style.display = "none";
+}
+
+function showSiteTiles(){
+  const tiles = document.getElementById("siteTiles");
+  if (tiles) tiles.style.display = "grid";
+  hideTable(); // ✅ cache le tableau → plus de colonnes vides visibles
+}
+
+function hideSiteTiles(){
+  const tiles = document.getElementById("siteTiles");
+  if (tiles) tiles.style.display = "none";
+  showTable(); // ✅ on remet le tableau dès qu'on sort des tuiles
+}
+
+
+function renderRootTiles(folders){
+  const tiles = document.getElementById("siteTiles");
+  if (!tiles) return;
+
+  tiles.innerHTML = "";
+
+  // ✅ S’il n’y a aucun dossier racine → on ne montre pas les tuiles (comme avant)
+  if (!folders || folders.length === 0){
+    hideSiteTiles();
+    return;
+  }
+
+  folders.forEach(f => {
+    const div = document.createElement("div");
+    div.className = "site-tile";
+const icon = getFolderIcon(f.name);
+
+div.innerHTML = `
+  <div class="icon">${icon}</div>
+  <div class="label">${f.name}</div>
+`;
+
+
+div.onclick = async () => {
+  const realId = getDriveFolderId(f); // ✅ ID réel (dossier cible si shortcut)
+  await openSiteAndShowTiles(realId, f.name);
+
+  const li = document.querySelector(`#folderTree > li[data-id="${realId}"]`);
+  if (li) {
+    document.querySelectorAll('#folderTree li span.folder-name')
+      .forEach(s => s.classList.remove('active-folder'));
+    const nameSpan = li.querySelector('span.folder-name');
+    if (nameSpan) nameSpan.classList.add('active-folder');
+    li.scrollIntoView({block:"center"});
+  }
+};
+
+
+
+    tiles.appendChild(div);
+  });
+
+  showSiteTiles();
+}
+
+async function renderSiteSubfolderTiles(siteId, siteName="") {
+  const tiles = document.getElementById("siteTiles");
+  if (!tiles) return;
+
+  // charge la liste des dossiers du site
+  const files = await fetchFolderContents(siteId);
+const folders = (files || [])
+  .filter(isDriveFolderOrShortcutFolder)
+
+    .sort((a,b) => a.name.localeCompare(b.name, 'fr', { sensitivity:'base' }));
+
+  tiles.innerHTML = "";
+
+  // Si pas de sous-dossiers -> afficher directement les fichiers du site
+  if (!folders.length){
+    hideSiteTiles();
+
+    // mémorise le dossier courant comme "dernier dossier"
+    localStorage.setItem('lastFolderId', siteId);
+    localStorage.setItem("lastFolderPath", siteName || "");
+
+    const files2 = await fetchFolderContents(siteId);
+    const filtered = (files2 || []).filter(x =>
+      /\.(csv|jpg|jpeg|png|gif|webp|json|pdf|mp4|webm|mov|m4v|avi|ppsx|pptx)$/i.test(x.name)
+    );
+
+    // preview : inclure images + pdf + vidéos
+    previewFiles = filtered.filter(x =>
+      /\.(jpg|jpeg|png|gif|webp|pdf|mp4|webm|mov|m4v)$/i.test(x.name)
+    );
+
+    displayFiles(filtered, siteName || "");
+    return;
+  }
+
+
+  // petit titre au-dessus des tuiles (optionnel mais pratique)
+  const head = document.createElement("div");
+  head.style.gridColumn = "1 / -1";
+  head.style.fontWeight = "900";
+  head.style.color = "var(--accent-darker)";
+  head.style.margin = "4px 2px 10px";
+  head.textContent = siteName ? `${siteName} — Choisissez le sous dossier` : "📍 Dossiers";
+  tiles.appendChild(head);
+
+  folders.forEach(f => {
+    const div = document.createElement("div");
+    div.className = "site-tile";
+const icon = getFolderIcon(f.name);
+
+div.innerHTML = `
+  <div class="icon">${icon}</div>
+  <div class="label">${f.name}</div>
+`;
+
+
+applyFolderTooltip(div, f.name);
+
+
+    
+    div.onclick = async () => {
+      // on quitte le mode tuiles
+      hideSiteTiles();
+
+      // on essaye de retrouver le LI déjà créé par toggleFolder
+const realId = getDriveFolderId(f);
+
+const childLi = document.querySelector(`#folderTree li[data-id="${realId}"]`);
+if (childLi) {
+  await loadFolderFilesOnClick(childLi, null);
+  childLi.scrollIntoView({block:"center"});
+} else {
+// fallback sécurisé : on force passage par la vraie fonction centrale
+const li = document.querySelector(`#folderTree li[data-id="${realId}"]`);
+
+if (li) {
+  await loadFolderFilesOnClick(li, null);
+} else {
+  console.warn("[TILES] Impossible de trouver le dossier dans l'arborescence :", f.name);
+}
+
+}
+
+    };
+
+    tiles.appendChild(div);
+  });
+
+  showSiteTiles();
+}
+
+
+// Clique sur un site (tile ou sidebar) → ouvre l'arbre + affiche les sous-dossiers en tuiles
+async function openSiteAndShowTiles(siteId, siteName="") {
+  const controls = document.querySelector(".controls");
+  if (controls) controls.style.display = "flex";
+
+  await refreshCampaignUIForSite(siteId);
+
+  const li = document.querySelector(`#folderTree > li[data-id="${siteId}"]`);
+  if (li) await expandFolder(li);   // ✅ au lieu de toggleFolder(li)
+
+  await renderSiteSubfolderTiles(siteId, siteName);
+}
+
+function setDefaultDateFilterFromAprilFirst(){
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+
+  filterStartDate = `${yyyy}-04-01`;
+  filterEndDate   = `${yyyy}-${mm}-${dd}`;
+
+  suppressAutoFilter = true;
+  try {
+    fpStart?.setDate(filterStartDate, false);
+    fpEnd?.setDate(filterEndDate, false);
+  } finally {
+    suppressAutoFilter = false;
+  }
+
+  document.querySelectorAll(".date-field")
+    .forEach(df => df.classList.add("has-date"));
+}
 
   
 
@@ -3071,8 +4302,16 @@ window.onload=()=>{
   // bouton "Télécharger le dossier" caché par défaut tant qu'aucun contenu
   document.getElementById("downloadFolderBtn").style.display="none";
 
+// ✅ Filtre automatique : du 1er avril de l’année en cours à aujourd’hui
+
 loadRootFolders();
+hideTable();
+
 initDatePickers();
+
+// ✅ Active le filtre par défaut
+setDefaultDateFilterFromAprilFirst();
+
 initYearSelect();
 const last = localStorage.getItem("lastFolderId");
 if (last) {
@@ -3118,71 +4357,8 @@ function clearBrowserCache() {
 }
 </script>
 
-
-
-
-
-
-
-
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
