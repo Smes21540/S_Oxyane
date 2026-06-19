@@ -1,0 +1,1547 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bilan campagne séchoir à maïs</title>
+<style>
+:root{
+  --bg:#f7f7f7;
+  --black:#050505;
+  --white:#ffffff;
+  --green:#00c83c;
+  --green-dark:#008f17;
+  --green-bright:#00ff38;
+  --yellow:#f6df22;
+  --yellow-dark:#b89a00;
+  --gold:#e7b61f;
+  --blue:#669cff;
+  --blue-dark:#285fbe;
+  --text:#111;
+  --shadow:#777;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:"Arial Narrow","Segoe UI",Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+.container{
+  width:min(1320px,97%);
+  margin:20px auto 45px;
+}
+.topbar{
+  position:relative;
+  min-height:72px;
+  padding:10px 18px;
+  border-bottom:2px solid #ddd;
+}
+.topbar h1{
+  margin:0;
+  text-align:center;
+  font-size:28px;
+  font-weight:600;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+}
+.topbar p{
+  margin:7px 0 0;
+  text-align:center;
+  font-size:14px;
+  text-transform:uppercase;
+}
+.nav{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin:18px 0 28px;
+  flex-wrap:wrap;
+}
+.nav a{
+  text-decoration:none;
+  color:#000;
+  background:linear-gradient(#fff96b,#f0d800);
+  border:3px outset #fff47d;
+  box-shadow:3px 3px 0 #aaa;
+  padding:9px 18px;
+  font-weight:800;
+  text-transform:uppercase;
+}
+.nav a.active{
+  background:linear-gradient(#7ab0ff,#4d84e6);
+  color:white;
+  border-color:#9fc2ff;
+}
+.section{
+  margin:0 0 30px;
+  background:transparent;
+}
+.section h2{
+  margin:0 0 16px;
+  padding:9px 14px;
+  color:white;
+  background:var(--green);
+  font-size:18px;
+  font-weight:500;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+}
+.section:nth-of-type(3) h2{
+  background:var(--blue);
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(320px,1fr));
+  column-gap:54px;
+  row-gap:10px;
+  padding:0 12px;
+}
+.field,.result{
+  min-height:46px;
+  display:grid;
+  grid-template-columns:minmax(220px,1fr) minmax(170px,220px);
+  align-items:center;
+  gap:12px;
+}
+.field label,.result .label{
+  text-align:right;
+  font-size:15px;
+  text-transform:uppercase;
+  letter-spacing:.2px;
+}
+.input-wrap{
+  display:flex;
+  align-items:center;
+  min-height:42px;
+  background:var(--black);
+  border:4px solid var(--yellow-dark);
+  box-shadow:3px 3px 0 #b7b7b7;
+}
+input{
+  width:100%;
+  min-width:0;
+  border:0;
+  outline:0;
+  background:var(--black);
+  color:white;
+  font-family:"Arial Narrow","Segoe UI",Arial,sans-serif;
+  font-size:28px;
+  text-align:right;
+  padding:3px 7px;
+}
+.unit{
+  color:white;
+  background:var(--black);
+  align-self:stretch;
+  display:flex;
+  align-items:center;
+  font-size:17px;
+  white-space:nowrap;
+  padding:0 8px 0 4px;
+}
+.result strong{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  min-height:42px;
+  padding:4px 10px;
+  background:var(--black);
+  color:white;
+  border:4px solid var(--green);
+  box-shadow:3px 3px 0 #b7b7b7;
+  font-size:27px;
+  font-weight:400;
+  white-space:nowrap;
+}
+.result.gold strong{
+  background:linear-gradient(180deg,#efc940,#dba915);
+  border-color:#c69a08;
+  color:white;
+}
+.result.blue strong{
+  border-color:var(--blue);
+}
+.result.main{
+  grid-column:1/-1;
+  grid-template-columns:minmax(260px,1fr) minmax(260px,360px);
+  margin-top:12px;
+}
+.result.main strong{
+  min-height:72px;
+  background:var(--green-bright);
+  color:#000;
+  border:5px solid #1df13f;
+  font-size:38px;
+  font-weight:500;
+}
+.result.main .label{
+  color:#000;
+  font-size:19px;
+  font-weight:700;
+}
+.help{
+  grid-column:2;
+  font-size:11px;
+  color:#444;
+  text-align:center;
+  margin-top:-5px;
+}
+.actions{
+  display:flex;
+  justify-content:center;
+  margin-top:22px;
+}
+button{
+  cursor:pointer;
+  background:linear-gradient(#fff96b,#f0d800);
+  border:4px outset #fff47d;
+  box-shadow:3px 3px 0 #aaa;
+  color:#000;
+  padding:10px 20px;
+  font-weight:800;
+  text-transform:uppercase;
+}
+.note{
+  margin:30px 12px 0;
+  padding:12px 16px;
+  background:#fff7bd;
+  border-left:7px solid var(--yellow);
+  font-size:13px;
+  line-height:1.45;
+}
+.choice-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(280px,1fr));
+  gap:30px;
+  margin-top:40px;
+}
+.choice{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:180px;
+  text-decoration:none;
+  border:5px solid var(--green);
+  background:#fff;
+  box-shadow:6px 6px 0 #aaa;
+  color:#000;
+}
+.choice:nth-child(2){border-color:var(--blue)}
+.choice .choice-title{
+  font-size:25px;
+  text-transform:uppercase;
+  font-weight:700;
+}
+.choice .choice-sub{
+  margin-top:10px;
+  font-size:15px;
+}
+@media(max-width:850px){
+  .grid{grid-template-columns:1fr;column-gap:0}
+  .field,.result{grid-template-columns:1fr}
+  .field label,.result .label{text-align:left}
+  .result.main{grid-column:auto;grid-template-columns:1fr}
+  .choice-grid{grid-template-columns:1fr}
+}
+
+/* === Version compacte écran classique === */
+.container{
+  width:min(1240px,98%);
+  margin:8px auto 18px;
+}
+.topbar{
+  min-height:52px;
+  padding:6px 12px;
+}
+.topbar h1{
+  font-size:22px;
+}
+.topbar p{
+  margin-top:3px;
+  font-size:12px;
+}
+.nav{
+  gap:8px;
+  margin:8px 0 12px;
+}
+.nav a{
+  padding:6px 12px;
+  font-size:12px;
+}
+.section{
+  margin-bottom:12px;
+}
+.section h2{
+  margin-bottom:7px;
+  padding:6px 10px;
+  font-size:15px;
+}
+.grid{
+  grid-template-columns:repeat(2,minmax(280px,1fr));
+  column-gap:28px;
+  row-gap:4px;
+  padding:0 8px;
+}
+.field,.result{
+  min-height:36px;
+  grid-template-columns:minmax(190px,1fr) minmax(145px,190px);
+  gap:8px;
+}
+.field label,.result .label{
+  font-size:12px;
+}
+.input-wrap{
+  min-height:34px;
+  border-width:3px;
+  box-shadow:2px 2px 0 #b7b7b7;
+}
+input{
+  font-size:21px;
+  padding:1px 5px;
+}
+.unit{
+  font-size:14px;
+  padding:0 6px 0 3px;
+}
+.result strong{
+  min-height:34px;
+  padding:2px 7px;
+  border-width:3px;
+  box-shadow:2px 2px 0 #b7b7b7;
+  font-size:21px;
+}
+.result.main{
+  margin-top:6px;
+  grid-template-columns:minmax(220px,1fr) minmax(220px,300px);
+}
+.result.main strong{
+  min-height:50px;
+  border-width:4px;
+  font-size:30px;
+}
+.result.main .label{
+  font-size:15px;
+}
+.actions{
+  margin-top:10px;
+}
+.note{
+  margin:12px 8px 0;
+  padding:8px 10px;
+  font-size:11px;
+}
+.choice-grid{
+  gap:18px;
+  margin-top:20px;
+}
+.choice{
+  min-height:125px;
+}
+.choice .choice-title{
+  font-size:20px;
+}
+.choice .choice-sub{
+  margin-top:6px;
+  font-size:13px;
+}
+@media(max-height:800px){
+  .container{margin-top:4px}
+  .section{margin-bottom:8px}
+  .section h2{padding:4px 8px}
+  .grid{row-gap:2px}
+  .field,.result{min-height:32px}
+  .input-wrap,.result strong{min-height:30px}
+  input,.result strong{font-size:19px}
+  .result.main strong{min-height:44px;font-size:27px}
+}
+
+
+/* === Zone titre et export PDF === */
+.pdf-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin:6px auto 12px;
+  flex-wrap:wrap;
+}
+.pdf-toolbar label{
+  font-size:12px;
+  font-weight:800;
+  text-transform:uppercase;
+}
+.pdf-toolbar input{
+  width:280px;
+  min-height:32px;
+  background:#fff;
+  color:#000;
+  border:2px solid #777;
+  box-shadow:none;
+  font-size:16px;
+  text-align:left;
+  padding:4px 8px;
+}
+.pdf-toolbar button{
+  padding:7px 14px;
+  font-size:12px;
+}
+.print-title{
+  display:none;
+  text-align:center;
+  font-size:22px;
+  font-weight:700;
+  margin:0 0 12px;
+  text-transform:uppercase;
+}
+@media print{
+  body{background:#fff}
+  .nav,.pdf-toolbar{display:none !important}
+  .print-title{display:block !important}
+  .container{
+    width:100%;
+    margin:0;
+  }
+  .section{
+    break-inside:avoid;
+  }
+  .topbar{
+    border:0;
+  }
+}
+
+
+/* Utilisé uniquement pendant la création du PDF */
+body.pdf-capture .nav,
+body.pdf-capture .pdf-toolbar{
+  display:none !important;
+}
+body.pdf-capture .print-title{
+  display:block !important;
+}
+
+
+/* Bouton PDF compact orange */
+.pdf-toolbar button{
+  padding:6px 12px !important;
+  min-height:auto !important;
+  font-size:12px !important;
+  line-height:1.2 !important;
+  background:#f57c00 !important;
+  border-color:#e65100 !important;
+  color:#fff !important;
+  box-shadow:none !important;
+}
+.pdf-toolbar button:hover{
+  background:#ef6c00 !important;
+}
+
+
+/* Bouton PDF : même police et mêmes dimensions que les boutons de navigation */
+.pdf-toolbar button{
+  padding:9px 18px !important;
+  font-family:inherit !important;
+  font-size:inherit !important;
+  line-height:normal !important;
+  font-weight:800 !important;
+  text-transform:uppercase !important;
+  background:linear-gradient(#ffad42,#f57c00) !important;
+  border:3px outset #ffbd66 !important;
+  color:#fff !important;
+  box-shadow:3px 3px 0 #aaa !important;
+}
+.pdf-toolbar button:hover{
+  background:linear-gradient(#ff9b22,#ef6c00) !important;
+}
+
+
+/* Bouton PDF placé avec les boutons de navigation */
+.nav{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.nav .nav-pdf-btn{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  box-sizing:border-box !important;
+  min-width:0 !important;
+  width:auto !important;
+  height:auto !important;
+  margin:0 !important;
+  padding:9px 18px !important;
+  font-family:inherit !important;
+  font-size:inherit !important;
+  line-height:normal !important;
+  font-weight:800 !important;
+  text-transform:uppercase !important;
+  background:linear-gradient(#ffad42,#f57c00) !important;
+  border:3px outset #ffbd66 !important;
+  color:#fff !important;
+  box-shadow:3px 3px 0 #aaa !important;
+  cursor:pointer !important;
+}
+.nav .nav-pdf-btn:hover{
+  background:linear-gradient(#ff9b22,#ef6c00) !important;
+}
+.pdf-title-only{
+  margin-top:6px;
+}
+
+
+/* Les trois boutons du haut ont exactement la même taille */
+.nav a,
+.nav .nav-pdf-btn{
+  width:168px !important;
+  height:38px !important;
+  box-sizing:border-box !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:0 8px !important;
+  margin:0 !important;
+  white-space:nowrap !important;
+}
+
+
+/* Les trois boutons du haut : dimensions et typographie strictement identiques */
+.nav a,
+.nav .nav-pdf-btn{
+  width:168px !important;
+  height:38px !important;
+  box-sizing:border-box !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:0 8px !important;
+  margin:0 !important;
+  white-space:nowrap !important;
+  font-family:Arial, Helvetica, sans-serif !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+  line-height:1 !important;
+  text-transform:uppercase !important;
+}
+
+
+/* Police globale du calculateur */
+html, body, button, input, select, textarea, a, label, span, strong, h1, h2, h3, h4, p, div{
+  font-family:"Trebuchet MS", Arial, Helvetica, sans-serif !important;
+}
+
+
+/* Force Trebuchet MS sur les trois boutons de navigation */
+.nav a,
+.nav .nav-pdf-btn{
+  font-family:"Trebuchet MS", Arial, Helvetica, sans-serif !important;
+}
+
+
+/* Boutons Sauvegarder / Ouvrir */
+.nav .nav-save-btn,
+.nav .nav-open-btn{
+  width:168px !important;
+  height:38px !important;
+  box-sizing:border-box !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:0 8px !important;
+  margin:0 !important;
+  white-space:nowrap !important;
+  font-family:"Trebuchet MS", Arial, Helvetica, sans-serif !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+  line-height:1 !important;
+  text-transform:uppercase !important;
+  color:#fff !important;
+  box-shadow:3px 3px 0 #aaa !important;
+  cursor:pointer !important;
+}
+.nav .nav-save-btn{
+  background:linear-gradient(#66bb6a,#2e7d32) !important;
+  border:3px outset #81c784 !important;
+}
+.nav .nav-open-btn{
+  background:linear-gradient(#7e57c2,#512da8) !important;
+  border:3px outset #9575cd !important;
+}
+.save-open-message{
+  min-height:18px;
+  margin:4px 0 8px;
+  text-align:center;
+  font-size:12px;
+  font-weight:700;
+}
+
+
+/* Répartition des boutons : navigation à gauche, actions à droite */
+.nav{
+  width:100% !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:20px !important;
+  flex-wrap:wrap !important;
+}
+
+.nav-left,
+.nav-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.nav-left{
+  justify-content:flex-start;
+}
+
+.nav-right{
+  justify-content:flex-end;
+  margin-left:auto;
+}
+
+
+/* === Thème harmonisé avec index.html === */
+:root{
+  --index-bg:#fff5f5;
+  --index-panel:#ffffff;
+  --index-sidebar:#ffe5d9;
+  --index-text:#333333;
+  --index-muted:#555555;
+  --index-accent:#ff7043;
+  --index-accent-dark:#e64a19;
+  --index-accent-muted:#ffccbc;
+  --index-danger:#d84315;
+  --index-border:#eeeeee;
+  --index-shadow:rgba(0,0,0,0.10);
+}
+
+html, body{
+  background:var(--index-bg) !important;
+  color:var(--index-text) !important;
+}
+
+.container{
+  background:transparent !important;
+}
+
+.topbar,
+.section{
+  background:var(--index-panel) !important;
+  border-color:var(--index-accent) !important;
+  box-shadow:0 4px 12px var(--index-shadow) !important;
+}
+
+.section h2,
+.topbar h1{
+  color:var(--index-accent-dark) !important;
+}
+
+.field,
+.result{
+  background:linear-gradient(180deg,#ffffff,var(--index-sidebar)) !important;
+  border-color:var(--index-accent-muted) !important;
+}
+
+.field label,
+.result .label{
+  color:var(--index-muted) !important;
+}
+
+.input-wrap{
+  border-color:var(--index-accent) !important;
+}
+
+.input-wrap input{
+  background:#ffffff !important;
+  color:var(--index-text) !important;
+}
+
+.unit{
+  color:var(--index-danger) !important;
+}
+
+/* Navigation à gauche */
+.nav-left a{
+  background:linear-gradient(180deg,var(--index-accent),var(--index-accent-dark)) !important;
+  border-color:var(--index-accent) !important;
+  color:#ffffff !important;
+}
+
+.nav-left a:hover{
+  filter:brightness(1.05);
+}
+
+/* Actions à droite */
+.nav-right .nav-pdf-btn{
+  background:linear-gradient(180deg,#ffb74d,#f57c00) !important;
+  border-color:#ffb74d !important;
+}
+
+.nav-right .nav-save-btn{
+  background:linear-gradient(180deg,#ff8a65,var(--index-accent-dark)) !important;
+  border-color:var(--index-accent) !important;
+}
+
+.nav-right .nav-open-btn{
+  background:linear-gradient(180deg,var(--index-accent-muted),var(--index-accent)) !important;
+  border-color:var(--index-accent) !important;
+  color:var(--index-danger) !important;
+}
+
+/* Champ titre */
+.pdf-toolbar{
+  background:transparent !important;
+}
+
+.pdf-toolbar input{
+  border-color:var(--index-accent) !important;
+  background:#ffffff !important;
+  color:var(--index-text) !important;
+}
+
+/* Mise en valeur IPé */
+.ipe-main{
+  border-color:var(--index-accent) !important;
+  box-shadow:0 4px 12px var(--index-shadow) !important;
+}
+
+
+/* =========================================================
+   THÈME IDENTIQUE AU SITE PRINCIPAL
+   ========================================================= */
+:root{
+  --bg:#fff5f5;
+  --panel:#ffffff;
+  --sidebar-bg:#ffe5d9;
+  --text:#333333;
+  --muted-text:#555555;
+  --shadow:rgba(0,0,0,0.10);
+  --table-border:#eeeeee;
+  --accent:#ff7043;
+  --accent-contrast:#ffffff;
+  --accent-darker:#e64a19;
+  --accent-muted:#ffccbc;
+  --danger:#d84315;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html,
+body{
+  margin:0 !important;
+  padding:0 !important;
+  background:var(--bg) !important;
+  color:var(--text) !important;
+  font-family:"Trebuchet MS",Arial,Helvetica,sans-serif !important;
+}
+
+body{
+  min-height:100vh;
+}
+
+.container{
+  width:min(1240px,calc(100% - 28px)) !important;
+  max-width:1240px !important;
+  margin:14px auto 24px !important;
+  padding:0 !important;
+  background:transparent !important;
+}
+
+/* Titre principal */
+.topbar{
+  margin:0 0 12px !important;
+  padding:12px 18px !important;
+  background:var(--panel) !important;
+  border:1px solid var(--table-border) !important;
+  border-left:6px solid var(--accent) !important;
+  border-radius:10px !important;
+  box-shadow:0 4px 12px var(--shadow) !important;
+}
+
+.topbar h1{
+  margin:0 !important;
+  color:var(--accent-darker) !important;
+  font-size:24px !important;
+  font-weight:800 !important;
+  text-transform:none !important;
+  letter-spacing:0 !important;
+}
+
+/* Barre supérieure */
+.nav{
+  width:100% !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:20px !important;
+  margin:0 0 10px !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+
+.nav-left,
+.nav-right{
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  flex-wrap:wrap !important;
+}
+
+/* Tous les boutons identiques aux boutons du site */
+.nav a,
+.nav button,
+.nav .nav-pdf-btn,
+.nav .nav-save-btn,
+.nav .nav-open-btn{
+  width:168px !important;
+  height:38px !important;
+  min-width:168px !important;
+  padding:0 12px !important;
+  margin:0 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border:0 !important;
+  border-radius:6px !important;
+  background:var(--accent) !important;
+  color:var(--accent-contrast) !important;
+  box-shadow:none !important;
+  text-decoration:none !important;
+  font-family:"Trebuchet MS",Arial,Helvetica,sans-serif !important;
+  font-size:13px !important;
+  font-weight:800 !important;
+  line-height:1 !important;
+  text-transform:none !important;
+  white-space:nowrap !important;
+  cursor:pointer !important;
+  transition:background .3s ease,transform .3s ease !important;
+}
+
+.nav a:hover,
+.nav button:hover,
+.nav .nav-pdf-btn:hover,
+.nav .nav-save-btn:hover,
+.nav .nav-open-btn:hover{
+  background:var(--accent-darker) !important;
+  transform:scale(1.05) !important;
+  filter:none !important;
+}
+
+.nav a.active{
+  background:var(--accent-darker) !important;
+  box-shadow:inset 0 0 0 2px var(--accent-muted) !important;
+}
+
+/* Ligne du titre de sauvegarde */
+.pdf-toolbar{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:8px !important;
+  margin:0 0 12px !important;
+  padding:8px 10px !important;
+  background:var(--panel) !important;
+  border:1px solid var(--table-border) !important;
+  border-radius:8px !important;
+  box-shadow:0 2px 8px var(--shadow) !important;
+}
+
+.pdf-toolbar label{
+  color:var(--accent-darker) !important;
+  font-size:13px !important;
+  font-weight:800 !important;
+  text-transform:none !important;
+}
+
+.pdf-toolbar input{
+  width:min(420px,65vw) !important;
+  min-height:36px !important;
+  padding:6px 10px !important;
+  background:#ffffff !important;
+  color:var(--text) !important;
+  border:2px solid var(--accent-muted) !important;
+  border-radius:8px !important;
+  box-shadow:none !important;
+  font-family:"Trebuchet MS",Arial,Helvetica,sans-serif !important;
+  font-size:15px !important;
+  text-align:left !important;
+  outline:none !important;
+}
+
+.pdf-toolbar input:focus{
+  border-color:var(--accent) !important;
+  box-shadow:0 0 0 3px rgba(255,112,67,.16) !important;
+}
+
+/* Cartes principales */
+.section{
+  margin:0 0 12px !important;
+  padding:0 12px 12px !important;
+  background:var(--panel) !important;
+  border:1px solid var(--table-border) !important;
+  border-radius:10px !important;
+  box-shadow:0 4px 12px var(--shadow) !important;
+  overflow:hidden !important;
+}
+
+.section h2,
+.section-gaz h2,
+.section:nth-of-type(3) h2{
+  margin:0 -12px 12px !important;
+  padding:9px 14px !important;
+  background:var(--accent) !important;
+  color:var(--accent-contrast) !important;
+  border:0 !important;
+  border-radius:0 !important;
+  font-size:15px !important;
+  font-weight:800 !important;
+  text-transform:uppercase !important;
+  letter-spacing:.2px !important;
+}
+
+/* Grilles et cellules */
+.grid{
+  gap:9px !important;
+}
+
+.field,
+.result{
+  min-height:48px !important;
+  padding:6px 8px !important;
+  background:var(--bg) !important;
+  border:1px solid var(--accent-muted) !important;
+  border-radius:8px !important;
+  box-shadow:none !important;
+}
+
+.field:nth-child(even),
+.result:nth-child(even){
+  background:var(--sidebar-bg) !important;
+}
+
+.field label,
+.result .label{
+  color:var(--muted-text) !important;
+  font-size:12px !important;
+  font-weight:700 !important;
+  text-transform:none !important;
+}
+
+/* Champs de saisie */
+.input-wrap{
+  min-height:34px !important;
+  background:#ffffff !important;
+  border:2px solid var(--accent) !important;
+  border-radius:8px !important;
+  box-shadow:none !important;
+  overflow:hidden !important;
+}
+
+.input-wrap input,
+input[type="number"],
+input[type="text"]{
+  background:#ffffff !important;
+  color:var(--text) !important;
+  font-family:"Trebuchet MS",Arial,Helvetica,sans-serif !important;
+}
+
+.input-wrap input{
+  min-height:30px !important;
+  font-size:18px !important;
+  font-weight:800 !important;
+}
+
+.input-wrap input:focus{
+  outline:none !important;
+}
+
+.unit{
+  min-width:54px !important;
+  color:var(--danger) !important;
+  background:var(--accent-muted) !important;
+  border-left:1px solid var(--accent) !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+}
+
+/* Résultats */
+.result strong{
+  min-height:34px !important;
+  background:#ffffff !important;
+  color:var(--danger) !important;
+  border:2px solid var(--accent-muted) !important;
+  border-radius:8px !important;
+  box-shadow:none !important;
+  font-size:18px !important;
+  font-weight:800 !important;
+}
+
+.result.gold,
+.result.blue{
+  background:var(--sidebar-bg) !important;
+  border-color:var(--accent) !important;
+}
+
+.result.gold strong,
+.result.blue strong{
+  color:var(--accent-darker) !important;
+}
+
+/* Résultat principal IPé */
+.result.main{
+  background:linear-gradient(180deg,#ffffff,var(--sidebar-bg)) !important;
+  border:2px solid var(--accent) !important;
+  border-radius:10px !important;
+  box-shadow:0 3px 10px rgba(255,112,67,.18) !important;
+}
+
+.result.main .label{
+  color:var(--accent-darker) !important;
+  font-size:14px !important;
+}
+
+.result.main strong{
+  min-height:48px !important;
+  border-radius:8px !important;
+  font-size:28px !important;
+}
+
+/* Message sauvegarde */
+.save-open-message{
+  margin:0 0 6px !important;
+  min-height:16px !important;
+  font-size:12px !important;
+}
+
+/* Scrollbars dans la même couleur que le site */
+*{
+  scrollbar-color:var(--accent-muted) transparent;
+}
+
+/* Adaptation mobile */
+@media(max-width:900px){
+  .nav{
+    align-items:stretch !important;
+  }
+
+  .nav-left,
+  .nav-right{
+    width:100% !important;
+  }
+
+  .nav-right{
+    justify-content:flex-start !important;
+    margin-left:0 !important;
+  }
+}
+
+@media(max-width:600px){
+  .container{
+    width:calc(100% - 14px) !important;
+    margin:7px auto 14px !important;
+  }
+
+  .nav a,
+  .nav button,
+  .nav .nav-pdf-btn,
+  .nav .nav-save-btn,
+  .nav .nav-open-btn{
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  .nav-left,
+  .nav-right{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+  }
+
+  .pdf-toolbar{
+    flex-direction:column !important;
+    align-items:stretch !important;
+  }
+
+  .pdf-toolbar input{
+    width:100% !important;
+  }
+}
+
+
+/* Logo SMES et illustration de fond comme sur index.html */
+.topbar{
+  position:relative !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  min-height:72px !important;
+}
+
+.topbar .smes-logo{
+  position:absolute;
+  left:16px;
+  top:50%;
+  transform:translateY(-50%);
+  height:52px;
+  width:auto;
+  object-fit:contain;
+}
+
+#smes-footer-bg{
+  position:fixed;
+  left:0;
+  bottom:0;
+  width:260px;
+  height:35vh;
+  background:url("img/smes_footer.png") left bottom no-repeat;
+  background-size:cover;
+  pointer-events:none;
+  z-index:0;
+  opacity:.95;
+  mask-image:linear-gradient(
+    to top,
+    rgba(0,0,0,1) 80%,
+    rgba(0,0,0,0) 100%
+  );
+  -webkit-mask-image:linear-gradient(
+    to top,
+    rgba(0,0,0,1) 80%,
+    rgba(0,0,0,0) 100%
+  );
+}
+
+.container{
+  position:relative;
+  z-index:1;
+}
+
+@media(max-width:800px){
+  .topbar .smes-logo{
+    position:static;
+    transform:none;
+    height:44px;
+    margin-right:10px;
+  }
+
+  .topbar{
+    justify-content:flex-start !important;
+  }
+
+  #smes-footer-bg{
+    width:180px;
+    height:26vh;
+    opacity:.65;
+  }
+}
+
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+</head>
+<body>
+<div id="smes-footer-bg"></div>
+<div class="container">
+  <div class="topbar">
+    <img src="img/logo.png" class="smes-logo" alt="Logo SMES">
+    <h1>Bilan global de campagne</h1>
+    <p>Quantité totale de gaz, tonnage total, coût et IPé global.</p>
+  </div>
+  <div class="nav">
+  <div class="nav-left">
+    <a href="calcul_horaire.html">Calcul horaire</a>
+    <a class="active" href="bilan_campagne.html">Bilan campagne</a>
+  </div>
+  <div class="nav-right">
+    <button type="button" class="nav-pdf-btn" onclick="exportPageToPDF('Bilan')">Exporter en PDF</button>
+    <button type="button" class="nav-save-btn" onclick="savePageData('bilan_campagne','Bilan')">Sauvegarder</button>
+    <button type="button" class="nav-open-btn" onclick="openPageData('bilan_campagne')">Ouvrir</button>
+  </div>
+</div>
+
+<input id="openJsonFile" type="file" accept=".json,application/json" style="display:none;">
+<div id="saveOpenMessage" class="save-open-message"></div>
+
+  <div class="pdf-toolbar pdf-title-only">
+  <label for="pdfTitle">Titre</label>
+  <input id="pdfTitle" type="text" value="Bilan campagne" placeholder="Titre du rapport">
+</div>
+  <div id="printTitle" class="print-title">Bilan campagne</div>
+
+
+  <section class="section">
+    <h2>1 — Quantité totale de gaz</h2>
+    <div class="grid">
+      <div class="field"><label>Volume total de gaz mesuré</label><div class="input-wrap"><input id="gasVolume" type="number" step="1" value="136619"><span class="unit">m³</span></div></div>
+      <div class="field"><label>Pression relative de lecture</label><div class="input-wrap"><input id="pressureMbar" type="number" step="1" value="1950"><span class="unit">mbar</span></div></div>
+      <div class="field"><label>Température du gaz</label><div class="input-wrap"><input id="gasTemp" type="number" step="0.1" value="15"><span class="unit">°C</span></div></div>
+      <div class="field"><label>PCS</label><div class="input-wrap"><input id="pcs" type="number" step="0.01" value="11.5"><span class="unit">kWh/Nm³</span></div></div>
+      <div class="field"><label>Prix moyen du gaz</label><div class="input-wrap"><input id="priceMWh" type="number" step="1" value="52"><span class="unit">€/MWh</span></div></div>
+      <div class="result gold"><span class="label">Volume total normalisé</span><strong id="normVolume"></strong></div>
+      <div class="result gold"><span class="label">Énergie totale</span><strong id="energy"></strong></div>
+      <div class="result gold"><span class="label">Énergie en thermies</span><strong id="thermies"></strong></div>
+      <div class="result gold"><span class="label">Coût total du gaz</span><strong id="totalCost"></strong></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>2 — Tonnage total et eau évaporée</h2>
+    <div class="grid">
+      <div class="field"><label>Tonnage total de maïs en sortie</label><div class="input-wrap"><input id="tonnageOut" type="number" step="1" value="43500"><span class="unit">t</span></div></div>
+      <div class="field"><label>Humidité moyenne maïs en entrée</label><div class="input-wrap"><input id="hIn" type="number" step="0.1" value="25"><span class="unit">%</span></div></div>
+      <div class="field"><label>Humidité moyenne maïs en sortie</label><div class="input-wrap"><input id="hOut" type="number" step="0.1" value="15"><span class="unit">%</span></div></div>
+      <div class="result"><span class="label">Tonnage équivalent de maïs en entrée</span><strong id="tonIn"></strong></div>
+      <div class="result"><span class="label">Eau présente en entrée</span><strong id="waterIn"></strong></div>
+      <div class="result"><span class="label">Eau totale évaporée</span><strong id="waterEvap"></strong></div>
+      <div class="result"><span class="label">Rendement massique sortie/entrée</span><strong id="yieldMass"></strong></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>3 — Indices de performance de campagne</h2>
+    <div class="grid">
+      <div class="result main"><span class="label">IPé global</span><strong id="ipe"></strong></div>
+      <div class="result"><span class="label">Consommation spécifique gaz</span><strong id="gasSpec"></strong></div>
+      <div class="result"><span class="label">Énergie par tonne de maïs</span><strong id="energyPerTon"></strong></div>
+      <div class="result"><span class="label">Gaz par tonne de maïs</span><strong id="gasPerTon"></strong></div>
+      <div class="result"><span class="label">Eau évaporée par tonne de maïs</span><strong id="waterPerTon"></strong></div>
+      <div class="result"><span class="label">Coût par tonne d’eau évaporée</span><strong id="costPerTee"></strong></div>
+      <div class="result"><span class="label">Coût par tonne de maïs</span><strong id="costPerTon"></strong></div>
+      <div class="field"><label>Durée totale de séchage</label><div class="input-wrap"><input id="dryingHours" type="number" step="1" value="500"><span class="unit">h</span></div></div>
+      <div class="result blue"><span class="label">Nombre de points séchoir par heure</span><strong id="dryerPoints"></strong></div>
+    </div>
+    
+  </section>
+</div>
+<script>
+
+function getIpeColor(value){
+  const min = 900;
+  const max = 1500;
+  if (!Number.isFinite(value)) return '#00ff38';
+  if (value <= min) return '#00ff38';
+  if (value >= max) return '#ff1f1f';
+
+  const ratio = (value - min) / (max - min);
+  const hue = 120 * (1 - ratio); // 120 = vert, 0 = rouge
+  return `hsl(${hue}, 95%, 50%)`;
+}
+
+function applyIpeColor(elementId, value){
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const color = getIpeColor(value);
+  el.style.background = color;
+  el.style.borderColor = color;
+  el.style.color = value >= 1300 ? '#fff' : '#000';
+}
+
+const defaults = {
+  gasVolume:136619, pressureMbar:1950, gasTemp:15, pcs:11.5, priceMWh:52,
+  tonnageOut:43500, hIn:25, hOut:15, dryingHours:500
+};
+const $ = id => document.getElementById(id);
+const num = id => parseFloat($(id).value) || 0;
+const fmt = (n,d=2) => Number.isFinite(n) ? n.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}) : '0,00';
+
+function calculate(){
+  const gasVolume=num('gasVolume'), pressure=num('pressureMbar'), temp=num('gasTemp');
+  const pcs=num('pcs'), price=num('priceMWh');
+  const tonOut=num('tonnageOut'), hIn=num('hIn')/100, hOut=num('hOut')/100;
+  const dryingHours=num('dryingHours');
+
+  const normVolume = gasVolume * ((1013.25 + pressure)/1013.25) * (273.15/(temp+273.15));
+  const energy = normVolume*pcs;
+  const thermies = energy/1.16222;
+  const totalCost = energy/1000*price;
+
+  const dryMatter = tonOut*(1-hOut);
+  const tonIn = (1-hIn)>0 ? dryMatter/(1-hIn) : 0;
+  const waterIn = tonIn-dryMatter;
+  const waterOut = tonOut-dryMatter;
+  const waterEvap = tonIn-tonOut;
+  const yieldMass = tonIn>0 ? tonOut/tonIn*100 : 0;
+
+  const ipe = waterEvap>0 ? energy/waterEvap : 0;
+  const gasSpec = waterEvap>0 ? normVolume/waterEvap : 0;
+  const energyPerTon = tonOut>0 ? energy/tonOut : 0;
+  const gasPerTon = tonOut>0 ? normVolume/tonOut : 0;
+  const waterPerTon = tonOut>0 ? waterEvap/tonOut : 0;
+  const costPerTee = waterEvap>0 ? totalCost/waterEvap : 0;
+  const costPerTon = tonOut>0 ? totalCost/tonOut : 0;
+  const waterEvapPerHour = dryingHours>0 ? waterEvap/dryingHours : 0;
+  const dryerPoints = waterEvapPerHour * 850;
+
+  $('normVolume').textContent=fmt(normVolume)+' Nm³';
+  $('energy').textContent=fmt(energy)+' kWh';
+  $('thermies').textContent=fmt(thermies)+' th';
+  $('totalCost').textContent=fmt(totalCost)+' €';
+  $('tonIn').textContent=fmt(tonIn)+' t';
+  $('waterIn').textContent=fmt(waterIn)+' t eau';
+  $('waterEvap').textContent=fmt(waterEvap)+' tée';
+  $('yieldMass').textContent=fmt(yieldMass)+' %';
+
+  $('ipe').textContent=fmt(ipe)+' kWh/tée';
+  applyIpeColor('ipe', ipe);
+  $('gasSpec').textContent=fmt(gasSpec)+' Nm³/tée';
+  $('energyPerTon').textContent=fmt(energyPerTon)+' kWh/t maïs';
+  $('gasPerTon').textContent=fmt(gasPerTon)+' Nm³/t maïs';
+  $('waterPerTon').textContent=fmt(waterPerTon,3)+' tée/t maïs';
+  $('costPerTee').textContent=fmt(costPerTee)+' €/tée';
+  $('costPerTon').textContent=fmt(costPerTon)+' €/t maïs';
+  $('dryerPoints').textContent=fmt(dryerPoints,0)+' POINTS';
+}
+document.querySelectorAll('input').forEach(i=>i.addEventListener('input',calculate));
+calculate();
+
+function sanitizeFileName(value){
+  return (value || '')
+    .trim()
+    .replace(/[\\/:*?"<>|]+/g, '_')
+    .replace(/\s+/g, '_')
+    .replace(/^_+|_+$/g, '') || 'Sans_titre';
+}
+
+async function exportPageToPDF(prefix){
+  const titleInput = document.getElementById('pdfTitle');
+  const printTitle = document.getElementById('printTitle');
+  const button = document.querySelector('.nav-pdf-btn');
+  const cleanTitle = sanitizeFileName(titleInput ? titleInput.value : '');
+  const visibleTitle = titleInput && titleInput.value.trim()
+    ? titleInput.value.trim()
+    : cleanTitle.replace(/_/g, ' ');
+
+  if (printTitle) printTitle.textContent = visibleTitle;
+
+  const container = document.querySelector('.container');
+  if (!container) return;
+
+  const oldText = button ? button.textContent : '';
+  if (button){
+    button.disabled = true;
+    button.textContent = 'Création du PDF...';
+  }
+
+  document.body.classList.add('pdf-capture');
+
+  try{
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      scrollX: 0,
+      scrollY: 0
+    });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4',
+      compress: true
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 6;
+    const maxWidth = pageWidth - margin * 2;
+    const maxHeight = pageHeight - margin * 2;
+
+    const ratio = Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
+    const imgWidth = canvas.width * ratio;
+    const imgHeight = canvas.height * ratio;
+    const x = (pageWidth - imgWidth) / 2;
+    const y = (pageHeight - imgHeight) / 2;
+
+    pdf.addImage(
+      canvas.toDataURL('image/jpeg', 0.95),
+      'JPEG',
+      x, y, imgWidth, imgHeight,
+      undefined,
+      'FAST'
+    );
+
+    pdf.save(`${prefix}_${cleanTitle}.pdf`);
+  } catch(error){
+    console.error('Erreur export PDF :', error);
+    alert("Impossible de générer le PDF.");
+  } finally {
+    document.body.classList.remove('pdf-capture');
+    if (button){
+      button.disabled = false;
+      button.textContent = oldText || 'Exporter en PDF';
+    }
+  }
+}
+
+function getPageTitleForSave(){
+  const titleInput = document.getElementById('pdfTitle');
+  return titleInput ? titleInput.value.trim() : '';
+}
+
+function collectInputValues(){
+  const values = {};
+  document.querySelectorAll('input, select, textarea').forEach(el => {
+    if (!el.id || el.id === 'openJsonFile') return;
+    if (el.type === 'checkbox'){
+      values[el.id] = el.checked;
+    } else if (el.type === 'radio'){
+      if (el.checked) values[el.name || el.id] = el.value;
+    } else {
+      values[el.id] = el.value;
+    }
+  });
+  return values;
+}
+
+function applyInputValues(values){
+  Object.entries(values || {}).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox'){
+      el.checked = Boolean(value);
+    } else {
+      el.value = value;
+    }
+    el.dispatchEvent(new Event('input', { bubbles:true }));
+    el.dispatchEvent(new Event('change', { bubbles:true }));
+  });
+}
+
+function showSaveOpenMessage(text, isError=false){
+  const el = document.getElementById('saveOpenMessage');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = isError ? '#b71c1c' : '#2e7d32';
+  clearTimeout(window.__saveOpenTimer);
+  window.__saveOpenTimer = setTimeout(() => {
+    el.textContent = '';
+  }, 4500);
+}
+
+async function savePageData(pageType, filePrefix){
+  try{
+    const payload = {
+      type: pageType,
+      version: 1,
+      savedAt: new Date().toISOString(),
+      title: getPageTitleForSave(),
+      values: collectInputValues()
+    };
+
+    const cleanTitle = sanitizeFileName(payload.title || 'Sans_titre');
+    const filename = `${filePrefix}_${cleanTitle}.json`;
+    const jsonText = JSON.stringify(payload, null, 2);
+
+    if ('showSaveFilePicker' in window){
+      try{
+        const handle = await window.showSaveFilePicker({
+          id: `sechoir-${pageType}`,
+          suggestedName: filename,
+          startIn: 'documents',
+          types: [{
+            description: 'Sauvegarde calculateur séchoir',
+            accept: {
+              'application/json': ['.json']
+            }
+          }]
+        });
+
+        const writable = await handle.createWritable();
+        await writable.write(jsonText);
+        await writable.close();
+
+        showSaveOpenMessage(`Sauvegarde enregistrée : ${handle.name}`);
+        return;
+      } catch(error){
+        if (error && error.name === 'AbortError'){
+          showSaveOpenMessage('Sauvegarde annulée.', true);
+          return;
+        }
+        console.warn('Fenêtre Enregistrer sous indisponible, téléchargement classique utilisé.', error);
+      }
+    }
+
+    const blob = new Blob([jsonText], {
+      type:'application/json;charset=utf-8'
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    showSaveOpenMessage(`Sauvegarde téléchargée : ${filename}`);
+  } catch(error){
+    console.error(error);
+    showSaveOpenMessage('Impossible de créer la sauvegarde.', true);
+  }
+}
+
+function openPageData(expectedType){
+  const input = document.getElementById('openJsonFile');
+  if (!input) return;
+
+  input.value = '';
+  input.onchange = async () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+
+    try{
+      const data = JSON.parse(await file.text());
+
+      if (!data || data.type !== expectedType){
+        throw new Error(
+          expectedType === 'calcul_horaire'
+            ? "Ce fichier n'est pas une sauvegarde du calcul horaire."
+            : "Ce fichier n'est pas une sauvegarde du bilan campagne."
+        );
+      }
+
+      if (!data.values || typeof data.values !== 'object'){
+        throw new Error('Le fichier de sauvegarde est incomplet.');
+      }
+
+      applyInputValues(data.values);
+
+      const titleInput = document.getElementById('pdfTitle');
+      if (titleInput && data.title !== undefined){
+        titleInput.value = data.title;
+      }
+
+      if (typeof normalizeTimer === 'function'){
+        normalizeTimer();
+      } else if (typeof calculate === 'function'){
+        calculate();
+      }
+
+      showSaveOpenMessage(`Sauvegarde ouverte : ${file.name}`);
+    } catch(error){
+      console.error(error);
+      showSaveOpenMessage(error.message || 'Impossible d’ouvrir cette sauvegarde.', true);
+    }
+  };
+
+  input.click();
+}
+
+</script>
+</body>
+</html>
