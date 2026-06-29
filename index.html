@@ -1170,7 +1170,7 @@ body[data-theme="orange"] #smes-footer-bg {
 
 
 
-/* === Version 0.955.24 : interface smartphone === */
+/* === Version 0.955.25 : interface smartphone corrigée === */
 #mobileMenuBtn,
 #mobileSidebarBackdrop{
   display:none;
@@ -1180,12 +1180,15 @@ body[data-theme="orange"] #smes-footer-bg {
   html,body{
     width:100%;
     min-height:100%;
-    height:100%;
-    overflow:hidden;
+    height:auto;
+    overflow-x:hidden;
+    overflow-y:auto;
   }
 
   body{
     display:block;
+    min-height:100dvh;
+    -webkit-overflow-scrolling:touch;
   }
 
   #mobileMenuBtn{
@@ -1242,9 +1245,11 @@ body[data-theme="orange"] #smes-footer-bg {
 
   #main{
     width:100%;
-    height:100dvh;
-    padding:8px 8px 10px;
-    overflow:hidden;
+    min-height:100dvh;
+    height:auto;
+    padding:8px 8px 24px;
+    overflow:visible;
+    display:block;
   }
 
   .header{
@@ -1286,9 +1291,8 @@ body[data-theme="orange"] #smes-footer-bg {
 
   .controls{
     width:100%;
-    max-height:38vh;
-    overflow-y:auto;
-    overflow-x:hidden;
+    max-height:none;
+    overflow:visible;
     gap:6px;
     padding:8px;
     margin-bottom:7px;
@@ -1352,14 +1356,13 @@ body[data-theme="orange"] #smes-footer-bg {
 
   #tableWrapper{
     min-height:0;
-    flex:1;
-    overflow:auto;
-    -webkit-overflow-scrolling:touch;
+    overflow:visible;
   }
   #tableContainer{
     width:100%;
     min-width:0;
-    overflow:auto;
+    overflow-x:auto;
+    overflow-y:visible;
     border-radius:7px;
     scrollbar-width:auto;
     -webkit-overflow-scrolling:touch;
@@ -1421,6 +1424,79 @@ body[data-theme="orange"] #smes-footer-bg {
   #secretBtn{bottom:4px;right:4px;}
 }
 
+
+  /* Dates visibles et utilisables au doigt */
+  .controls{display:flex!important;}
+  .controls > #applyDateFilterBtn{
+    flex:1 1 100%;
+    background:linear-gradient(180deg,#43a047,#2e7d32);
+    min-height:44px;
+  }
+  .date-field{
+    display:grid;
+    grid-template-columns:34px minmax(0,1fr);
+    flex:1 1 calc(50% - 24px);
+  }
+  .date-field .flatpickr-input,
+  .date-field.has-date .flatpickr-input{
+    display:block!important;
+    width:100%!important;
+    min-width:0;
+    font-size:14px;
+    padding:7px 2px;
+  }
+
+  /* Un seul bouton menu par ligne sur smartphone */
+  .action-cell-inner.mobile-actions-ready{
+    position:relative;
+    display:flex;
+    justify-content:center;
+    min-width:52px;
+  }
+  .mobile-row-menu-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:44px;
+    height:40px;
+    padding:0!important;
+    border-radius:9px;
+    font-size:22px!important;
+    line-height:1;
+    background:linear-gradient(180deg,var(--accent),var(--accent-darker));
+    color:#fff;
+    border:0;
+    box-shadow:0 2px 7px rgba(0,0,0,.2);
+  }
+  .mobile-row-menu-panel{
+    display:none;
+    position:fixed;
+    z-index:3600;
+    right:10px;
+    width:min(250px,calc(100vw - 20px));
+    padding:8px;
+    border-radius:12px;
+    background:var(--panel);
+    border:2px solid var(--accent);
+    box-shadow:0 10px 30px rgba(0,0,0,.32);
+    flex-direction:column;
+    gap:7px;
+  }
+  .mobile-row-menu-panel.is-open{display:flex;}
+  .mobile-row-menu-panel > a{display:block;text-decoration:none;}
+  .mobile-row-menu-panel .action-btn,
+  .mobile-row-menu-panel > a .action-btn{
+    display:flex!important;
+    width:100%!important;
+    min-height:44px;
+    align-items:center;
+    justify-content:center;
+    margin:0!important;
+    opacity:1!important;
+    visibility:visible!important;
+    font-size:13px!important;
+  }
+
 @media (max-width: 390px){
   .sechoir-calcul-btn{font-size:10px;}
   .site-tiles{grid-template-columns:1fr 1fr;gap:7px;}
@@ -1456,7 +1532,7 @@ body[data-theme="orange"] #smes-footer-bg {
 <a class="sechoir-calcul-btn bilan" href="bilan_campagne.html" id="sechoirCalcCampaignLink" rel="noopener noreferrer" target="_blank" title="Ouvrir le bilan campagne">
     📊 Bilan campagne
   </a>
-<span class="app-version" title="Version de l’interface">Version 0.955.24 (29/06/26)</span>
+<span class="app-version" title="Version de l’interface">Version 0.955.25 (29/06/26)</span>
 </div>
 <img alt="Logo" class="logo" id="mainLogo" src="img/logo.png"/>
 <div id="scanIndicator">🔄 Analyse en cours...</div>
@@ -1470,6 +1546,7 @@ body[data-theme="orange"] #smes-footer-bg {
   <div class="date-field"><span id="iconStart">📅</span><input id="startDate" type="date"/></div>
   à
   <div class="date-field"><span id="iconEnd">📅</span><input id="endDate" type="date"/></div>
+<button id="applyDateFilterBtn" type="button" onclick="applyFilter()">✓ Appliquer</button>
 <!-- ✅ Boutons campagne auto (2024/2025...) -->
 <div class="campaign-box" id="campaignBox" style="display:none;">
 <div class="campaign-title">Vous Pouvez selectionner une période précise :</div>
@@ -4528,7 +4605,11 @@ onChange: async function(selectedDates, dateStr, instance) {
   filterStartDate = document.getElementById("startDate").value;
   filterEndDate   = document.getElementById("endDate").value;
 
-  await refreshCurrentFolder();
+  // Sur smartphone, on attend le bouton Appliquer afin de choisir les deux dates
+  // sans recharger tout le dossier après chaque sélection.
+  if (!window.matchMedia("(max-width: 768px)").matches) {
+    await refreshCurrentFolder();
+  }
 
   const ys = document.getElementById("yearSelect");
   if (ys) ys.value = "";
@@ -7097,6 +7178,75 @@ window.addEventListener("DOMContentLoaded", updateCalculatorRootLinks);
   window.addEventListener("resize", () => {
     if (!isMobile()) setOpen(false);
   });
+})();
+</script>
+
+
+<script>
+/* Menus d'actions compacts sur smartphone */
+(function initMobileRowActionMenus(){
+  const mobileQuery = window.matchMedia("(max-width: 768px)");
+
+  function closeAll(except){
+    document.querySelectorAll(".mobile-row-menu-panel.is-open").forEach(panel => {
+      if (panel !== except) panel.classList.remove("is-open");
+    });
+  }
+
+  function positionPanel(btn, panel){
+    const r = btn.getBoundingClientRect();
+    const estimatedHeight = Math.min(280, panel.scrollHeight || 220);
+    let top = r.bottom + 6;
+    if (top + estimatedHeight > window.innerHeight - 8) {
+      top = Math.max(8, r.top - estimatedHeight - 6);
+    }
+    panel.style.top = `${top}px`;
+  }
+
+  function enhance(root=document){
+    if (!mobileQuery.matches) return;
+    root.querySelectorAll?.(".action-cell-inner:not(.mobile-actions-ready)").forEach(inner => {
+      const actionable = Array.from(inner.children).filter(el =>
+        el.matches("button,a,img") || el.querySelector?.("button")
+      );
+      if (actionable.length < 2) return;
+
+      const panel = document.createElement("div");
+      panel.className = "mobile-row-menu-panel";
+      actionable.forEach(el => panel.appendChild(el));
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "mobile-row-menu-btn";
+      btn.textContent = "☰";
+      btn.title = "Ouvrir les actions";
+      btn.setAttribute("aria-label", "Ouvrir les actions de cette ligne");
+
+      btn.addEventListener("click", event => {
+        event.stopPropagation();
+        const opening = !panel.classList.contains("is-open");
+        closeAll(panel);
+        panel.classList.toggle("is-open", opening);
+        if (opening) requestAnimationFrame(() => positionPanel(btn,panel));
+      });
+      panel.addEventListener("click", event => event.stopPropagation());
+      inner.append(btn,panel);
+      inner.classList.add("mobile-actions-ready");
+    });
+  }
+
+  document.addEventListener("click", () => closeAll());
+  window.addEventListener("scroll", () => closeAll(), {passive:true});
+  window.addEventListener("resize", () => { closeAll(); enhance(); });
+  new MutationObserver(mutations => {
+    if (!mobileQuery.matches) return;
+    mutations.forEach(m => m.addedNodes.forEach(node => {
+      if (node.nodeType === 1) enhance(node);
+    }));
+    enhance();
+  }).observe(document.getElementById("csvTable"), {childList:true,subtree:true});
+  document.addEventListener("DOMContentLoaded", () => enhance());
+  window.addEventListener("load", () => enhance());
 })();
 </script>
 

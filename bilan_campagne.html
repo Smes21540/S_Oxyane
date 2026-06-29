@@ -1413,6 +1413,69 @@ body.vfd-enabled .humidity-vfd-only{
   }
 }
 
+
+
+/* === Adaptation smartphone 29/06/2026 === */
+@media(max-width:760px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden;}
+  body{font-size:14px;-webkit-text-size-adjust:100%;}
+  .container{width:100%;margin:0;padding:8px 8px 28px;}
+  .topbar{min-height:0;padding:10px 4px;border-bottom:1px solid #ccc;}
+  .topbar h1{font-size:19px;line-height:1.2;}
+  .topbar p{font-size:11px;}
+
+  .nav{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;margin:8px 0 12px!important;}
+  .nav-left{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;width:100%;}
+  .nav-right{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:7px!important;width:100%;margin:0!important;}
+  .nav a,.nav .nav-pdf-btn,.nav .nav-save-btn,.nav .nav-open-btn{
+    width:100%!important;height:44px!important;min-width:0!important;padding:0 5px!important;
+    font-size:10px!important;white-space:normal!important;text-align:center!important;box-shadow:1px 2px 0 #aaa!important;
+  }
+  .save-open-message{margin:2px 0 6px;font-size:11px;}
+  .pdf-toolbar{display:grid;grid-template-columns:1fr;margin:7px 0;gap:5px;}
+  .pdf-toolbar label{text-align:left;}
+  .pdf-toolbar input{width:100%!important;min-height:42px;font-size:16px;}
+
+  .drive-json-loader,.drive-json-loader.visible{grid-template-columns:1fr!important;padding:8px;margin:7px 0;}
+  .drive-json-loader select,.drive-json-loader button{min-height:43px;width:100%;}
+
+  .section{margin-bottom:10px;border:1px solid #d0d0d0;background:#fff;}
+  .section h2{position:sticky;top:0;z-index:20;margin:0!important;padding:9px 8px!important;font-size:13px!important;line-height:1.25;}
+  .section-toggle{width:36px!important;height:34px!important;min-width:36px!important;font-size:22px!important;}
+  .grid{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;padding:8px!important;}
+  .field,.result,.result.main,.comparison-pair .result.after-result,
+  .cost-display-stack>.result,.savings-summary>.result{
+    grid-template-columns:1fr!important;width:100%!important;gap:4px!important;min-height:0!important;
+  }
+  .field label,.result .label,.label-with-info,.result-label-with-info{
+    width:100%!important;text-align:left!important;justify-content:flex-start!important;font-size:11px!important;
+  }
+  .input-wrap{width:100%!important;min-height:44px!important;border-width:3px!important;}
+  input{font-size:23px!important;min-height:38px!important;}
+  .unit{font-size:14px!important;}
+  .result strong{
+    width:100%!important;min-width:0!important;max-width:100%!important;height:auto!important;
+    min-height:44px!important;max-height:none!important;font-size:21px!important;justify-self:stretch!important;
+  }
+  .result.main strong{min-height:56px!important;font-size:27px!important;}
+  .comparison-pair{grid-template-columns:1fr!important;gap:8px!important;}
+  .comparison-pair .result.after-result strong,.comparison-pair .result.after-result .label{order:initial!important;}
+  .comparison-pair .result .label{padding-left:0!important;text-align:left!important;}
+  .cost-display-stack,.savings-summary{width:100%!important;margin:8px 0!important;gap:8px!important;}
+
+  .vfd-line{grid-template-columns:1fr 46px!important;padding:7px 4px!important;}
+  .vfd-label-cell{text-align:left!important;font-size:11px;}
+  .frequency-inline{grid-template-columns:1fr!important;}
+  .drying-model{grid-template-columns:1fr!important;margin:4px 0!important;}
+  .curve-box{min-height:230px!important;padding:4px!important;overflow-x:auto!important;}
+  #dryingCurve{height:210px!important;min-width:520px;}
+  .reference-values{grid-template-columns:1fr!important;}
+  .humidity-info-content{position:fixed!important;left:10px!important;right:10px!important;top:20%!important;width:auto!important;max-height:60vh;overflow:auto;}
+  .note,.warning,.curve-note{font-size:11px;margin:7px 0!important;}
+  .choice-grid{grid-template-columns:1fr!important;gap:12px!important;margin-top:14px!important;}
+  .choice{min-height:100px!important;}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
