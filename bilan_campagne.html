@@ -1476,6 +1476,96 @@ body.vfd-enabled .humidity-vfd-only{
   .choice{min-height:100px!important;}
 }
 
+
+
+/* === Smartphone V2 : libellé et case côte à côte === */
+@media(max-width:760px){
+  .field,
+  .result,
+  .result.main,
+  .comparison-pair .result,
+  .comparison-pair .result.after-result,
+  .cost-display-stack > .result,
+  .savings-summary > .result{
+    display:grid!important;
+    grid-template-columns:minmax(0,54%) minmax(0,46%)!important;
+    align-items:center!important;
+    gap:7px!important;
+    width:100%!important;
+  }
+
+  .field > label,
+  .field > .label-with-info,
+  .result > .label,
+  .result > .result-label-with-info{
+    width:100%!important;
+    min-width:0!important;
+    justify-self:stretch!important;
+    text-align:right!important;
+    justify-content:flex-end!important;
+    font-size:10.5px!important;
+    line-height:1.18!important;
+    overflow-wrap:anywhere;
+  }
+
+  .field > .input-wrap,
+  .result > strong{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    justify-self:stretch!important;
+  }
+
+  .input-wrap{
+    min-height:42px!important;
+  }
+  input{
+    min-width:0!important;
+    font-size:20px!important;
+  }
+  .unit{
+    padding-left:3px!important;
+    padding-right:5px!important;
+    font-size:11px!important;
+  }
+  .result strong{
+    min-height:42px!important;
+    padding:3px 5px!important;
+    font-size:18px!important;
+    white-space:nowrap!important;
+  }
+  .result.main strong{
+    min-height:48px!important;
+    font-size:22px!important;
+  }
+
+  .comparison-pair .result.after-result > .label,
+  .comparison-pair .result.after-result > .result-label-with-info{
+    order:1!important;
+    padding-left:0!important;
+    text-align:right!important;
+  }
+  .comparison-pair .result.after-result > strong{
+    order:2!important;
+  }
+
+  .frequency-inline{
+    grid-template-columns:minmax(0,54%) minmax(0,46%)!important;
+    gap:7px!important;
+  }
+  .frequency-inline label{
+    text-align:right!important;
+    font-size:10.5px!important;
+  }
+
+  .reference-values div{
+    grid-template-columns:minmax(0,58%) minmax(0,42%)!important;
+  }
+  .reference-values span{
+    text-align:right!important;
+  }
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
